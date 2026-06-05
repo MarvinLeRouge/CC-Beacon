@@ -291,6 +291,26 @@ function duration(w) {
   return Math.floor(m / 60) + 'h' + (m % 60 ? String(m % 60).padStart(2, '0') : '');
 }
 
+function estimatedEnd(w) {
+  if (w.status !== 'in_progress') return null;
+  if (!w.step_count || !w.steps_done) return null;
+  const elapsed   = Date.now() - new Date(w.started_at).getTime();
+  const progress  = w.steps_done / w.step_count;
+  const estimated = elapsed / progress;
+  return new Date(new Date(w.started_at).getTime() + estimated);
+}
+
+function fmtTime(date) {
+  if (!date) return '';
+  const now  = new Date();
+  const diff = date - now;
+  const abs  = Math.abs(diff);
+  const m    = Math.round(abs / 60_000);
+  if (m < 60) return (diff > 0 ? 'dans ' : 'il y a ') + m + ' min';
+  const h = Math.floor(m / 60);
+  return (diff > 0 ? 'dans ' : 'il y a ') + h + 'h' + (m % 60 ? String(m % 60).padStart(2, '0') : '');
+}
+
 function render(html) { document.getElementById('app').innerHTML = html; }
 
 // ---------------------------------------------------------------------------
@@ -401,7 +421,7 @@ function drawWorks(project, sl1, page) {
           <span class="card-title">${esc(w.title)}</span>
           ${badge(w.status)}
         </div>
-        <div class="card-meta">${duration(w) ? duration(w) + ' · ' : ''}${fmtDate(w.updated_at)}</div>
+        <div class="card-meta">${cardMeta(w)}</div>
         ${progressBar(prog, w.status === 'done')}
         ${w.step_count ? `
           <button class="steps-toggle" data-action="toggle" data-id="${esc(w.id)}">${toggleLabel}</button>
@@ -501,6 +521,21 @@ function fmtDate(iso) {
   if (!iso) return '';
   const d = new Date(iso);
   return d.toLocaleString('fr-FR', { day: '2-digit', month: '2-digit', hour: '2-digit', minute: '2-digit' });
+}
+
+function cardMeta(w) {
+  if (w.status === 'done' && w.completion_time) {
+    const parts = ['Terminé le ' + fmtDate(w.completion_time)];
+    if (duration(w)) parts.push(duration(w));
+    return parts.join(' · ');
+  }
+  if (w.status === 'in_progress') {
+    const end = estimatedEnd(w);
+    if (end) return 'Fin estimée ' + fmtTime(end);
+    if (duration(w)) return 'En cours depuis ' + duration(w);
+    return 'En cours';
+  }
+  return fmtDate(w.updated_at);
 }
 
 // ---------------------------------------------------------------------------

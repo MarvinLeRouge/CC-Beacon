@@ -98,30 +98,40 @@ NOW=$(date -u +%Y-%m-%dT%H:%M:%SZ)
 
 if [[ -f "$WORK_FILE" ]]; then
   STARTED_AT=$(jq -r '.started_at' "$WORK_FILE")
+  # Preserve completion_time if already set and status is still done
+  COMPLETION_TIME=$(jq -r '.completion_time // ""' "$WORK_FILE")
 else
   STARTED_AT="$NOW"
+  COMPLETION_TIME=""
+fi
+
+# Set completion_time when work is marked done for the first time
+if [[ "$STATUS" == "done" && -z "$COMPLETION_TIME" ]]; then
+  COMPLETION_TIME="$NOW"
 fi
 
 jq -n \
-  --arg     id         "$ID"       \
-  --arg     project    "$PROJECT"  \
-  --arg     sl1        "$SL1"      \
-  --arg     title      "$TITLE"    \
-  --arg     status     "$STATUS"   \
-  --arg     started_at "$STARTED_AT" \
-  --arg     updated_at "$NOW"      \
-  --argjson steps      "$STEPS"    \
-  --arg     summary    "$SUMMARY"  \
+  --arg     id              "$ID"             \
+  --arg     project         "$PROJECT"        \
+  --arg     sl1             "$SL1"            \
+  --arg     title           "$TITLE"          \
+  --arg     status          "$STATUS"         \
+  --arg     started_at      "$STARTED_AT"     \
+  --arg     updated_at      "$NOW"            \
+  --arg     completion_time "$COMPLETION_TIME" \
+  --argjson steps           "$STEPS"          \
+  --arg     summary         "$SUMMARY"        \
   '{
-    id:         $id,
-    project:    $project,
-    sl1:        $sl1,
-    title:      $title,
-    status:     $status,
-    started_at: $started_at,
-    updated_at: $updated_at,
-    steps:      $steps,
-    summary:    $summary
+    id:              $id,
+    project:         $project,
+    sl1:             $sl1,
+    title:           $title,
+    status:          $status,
+    started_at:      $started_at,
+    updated_at:      $updated_at,
+    completion_time: (if $completion_time == "" then null else $completion_time end),
+    steps:           $steps,
+    summary:         $summary
   }' > "$WORK_FILE"
 
 # --- Regenerate index -------------------------------------------------------
@@ -129,15 +139,16 @@ jq -n \
 WORKS_JSON=$(
   find "$WORKS_DIR" -maxdepth 1 -name "*.json" ! -name "index.json" | sort |
   xargs -I{} jq '{
-    id:         .id,
-    project:    .project,
-    sl1:        .sl1,
-    title:      .title,
-    status:     .status,
-    started_at: .started_at,
-    updated_at: .updated_at,
-    step_count: (.steps | length),
-    steps_done: ([.steps[] | select(.status == "done")] | length)
+    id:              .id,
+    project:         .project,
+    sl1:             .sl1,
+    title:           .title,
+    status:          .status,
+    started_at:      .started_at,
+    updated_at:      .updated_at,
+    completion_time: .completion_time,
+    step_count:      (.steps | length),
+    steps_done:      ([.steps[] | select(.status == "done")] | length)
   }' {} |
   jq -s '.'
 )
