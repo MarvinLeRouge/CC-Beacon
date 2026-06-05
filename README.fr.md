@@ -2,7 +2,7 @@
 
 ---
 
-# cc-beacon
+# CC-Beacon
 
 > *Un outil léger de suivi de tâches Claude Code — fichiers JSON déposés sur un VPS via rsync, servis derrière Traefik, consultables depuis un smartphone.*
 
@@ -12,7 +12,7 @@
 
 ## Concept
 
-Les sessions Claude Code produisent un flux d'étapes et de décisions qui disparaissent dès que le terminal se ferme. **cc-beacon** rend ce travail visible : chaque session écrit un fichier JSON structuré (un *work*) décrivant ses étapes, son statut et sa durée. Ces fichiers sont poussés vers un VPS et affichés via une page HTML mobile-first — pas d'application, pas de framework backend, juste des fichiers statiques et une URL protégée par un token mis en favori.
+Les sessions Claude Code produisent un flux d'étapes et de décisions qui disparaissent dès que le terminal se ferme. **CC-Beacon** rend ce travail visible : chaque session écrit un fichier JSON structuré (un *work*) décrivant ses étapes, son statut et sa durée. Ces fichiers sont poussés vers un VPS et affichés via une page HTML mobile-first — pas d'application, pas de framework backend, juste des fichiers statiques et une URL protégée par un token mis en favori.
 
 La hiérarchie de suivi est intentionnellement simple :
 
@@ -91,14 +91,14 @@ projet
 ├── docs/
 │   └── work-in-progress/     ← notes de planification
 ├── scripts/
-│   └── update_work.sh        ← script de déploiement rsync (lit ~/.cc-beacon/config.json)
+│   └── update_work.sh        ← script de déploiement rsync (lit ~/.CC-Beacon/config.json)
 ├── web/
 │   └── index.html            ← interface mobile
 ├── config.example.json       ← template versionné (sans valeurs sensibles)
 ├── .gitignore
 └── README.md
 
-~/.cc-beacon/                 ← hors repo, jamais commité
+~/.CC-Beacon/                 ← hors repo, jamais commité
 └── config.json               ← valeurs réelles : hôte VPS, user SSH, token, labels sl1
 ```
 
@@ -106,20 +106,20 @@ projet
 
 ## Configuration
 
-`config.example.json` est le template versionné. Il suffit de le copier dans `~/.cc-beacon/config.json` et de renseigner les valeurs réelles.
+`config.example.json` est le template versionné. Il suffit de le copier dans `~/.CC-Beacon/config.json` et de renseigner les valeurs réelles.
 
 ```json
 {
   "vps_host": "votre-hote-ou-ip-vps",
   "vps_user": "votre-user-ssh",
-  "remote_path": "/var/www/cc-beacon/works/",
+  "remote_path": "/var/www/CC-Beacon/works/",
   "token": "votre-token-secret",
   "base_url": "https://beacon.votre-domaine.com",
   "sl1_label": "module"
 }
 ```
 
-`~/.cc-beacon/` est exclu du repo via `.gitignore`.
+`~/.CC-Beacon/` est exclu du repo via `.gitignore`.
 
 ---
 
@@ -127,7 +127,7 @@ projet
 
 Le VPS sert les fichiers statiques via un container nginx derrière Traefik :
 
-- Les fichiers sont stockés dans `/var/www/cc-beacon/works/`
+- Les fichiers sont stockés dans `/var/www/CC-Beacon/works/`
 - nginx les expose sous `/TOKEN/` (le token sert de préfixe de chemin secret)
 - Traefik gère le sous-domaine (`beacon.votre-domaine.com`) et le TLS via Let's Encrypt
 - L'utilisateur SSH utilisé par rsync doit avoir les droits d'écriture sur le dossier `works/`
@@ -180,7 +180,7 @@ Quand un work a le statut `in_progress`, la page se rafraîchit automatiquement 
 - [ ] **Phase 2** — Configuration VPS : nginx, labels Traefik, arborescence
 - [ ] **Phase 3** — Scripts et hooks : `config.example.json`, `update_work.sh`, hook `settings.json`
 - [ ] **Phase 4** — Interface mobile : `web/index.html`
-- [ ] **Phase 5** — Section CLAUDE.md décrivant cc-beacon pour les sessions futures
+- [ ] **Phase 5** — Section CLAUDE.md décrivant CC-Beacon pour les sessions futures
 
 ---
 
