@@ -128,7 +128,17 @@ jq -n \
 
 WORKS_JSON=$(
   find "$WORKS_DIR" -maxdepth 1 -name "*.json" ! -name "index.json" | sort |
-  xargs -I{} jq '{id:.id,project:.project,sl1:.sl1,title:.title,status:.status}' {} |
+  xargs -I{} jq '{
+    id:         .id,
+    project:    .project,
+    sl1:        .sl1,
+    title:      .title,
+    status:     .status,
+    started_at: .started_at,
+    updated_at: .updated_at,
+    step_count: (.steps | length),
+    steps_done: ([.steps[] | select(.status == "done")] | length)
+  }' {} |
   jq -s '.'
 )
 
