@@ -6,7 +6,7 @@
 
 > *Un outil léger de suivi de tâches Claude Code — fichiers JSON déposés sur un VPS via rsync, servis derrière Traefik, consultables depuis un smartphone.*
 
-![Statut](https://img.shields.io/badge/Statut-En%20cours-yellow)
+![Statut](https://img.shields.io/badge/Statut-Livré-brightgreen)
 
 ---
 
@@ -27,9 +27,9 @@ projet
 
 ## Fonctionnement
 
-1. **Hook Claude Code** — un hook `Stop` dans `~/.claude/settings.json` appelle `scripts/update_work.sh` à la fin de chaque session
-2. **rsync via SSH** — le script pousse le fichier JSON du work et un index régénéré vers le VPS
-3. **nginx + Traefik** — les fichiers statiques sont servis sous un chemin secret (`/TOKEN/`), derrière un reverse proxy Traefik avec TLS automatique
+1. **Hook Claude Code** — un hook `Stop` dans `~/.claude/settings.json` appelle `scripts/update_work.sh --sync-only` à la fin de chaque session
+2. **rsync via SSH** — le script pousse les fichiers JSON et un index régénéré vers le VPS
+3. **nginx + Traefik** — les fichiers statiques sont servis sous un chemin secret (`/TOKEN/`), derrière un reverse proxy Traefik avec TLS automatique ; le token est injecté au démarrage du container via `envsubst`
 4. **Interface mobile** — `web/index.html` récupère l'index et affiche les vues projet/sl1/work avec pagination et rafraîchissement automatique quand un work est `in_progress`
 
 ---
@@ -62,6 +62,7 @@ projet
   "status": "pending | in_progress | done | error",
   "started_at": "2026-06-03T10:00:00Z",
   "updated_at": "2026-06-03T10:42:00Z",
+  "completion_time": "2026-06-03T10:42:00Z",
   "steps": [
     { "label": "…", "status": "pending | in_progress | done", "at": "…" }
   ],
@@ -69,12 +70,25 @@ projet
 }
 ```
 
+`completion_time` est fixé une seule fois lors du premier passage à `done` et n'est jamais écrasé.
+
 ### Fichier index (régénéré à chaque mise à jour)
 
 ```json
 {
   "works": [
-    { "id": "…", "project": "…", "sl1": "…", "title": "…", "status": "…" }
+    {
+      "id": "…",
+      "project": "…",
+      "sl1": "…",
+      "title": "…",
+      "status": "…",
+      "started_at": "…",
+      "updated_at": "…",
+      "completion_time": "…",
+      "step_count": 4,
+      "steps_done": 3
+    }
   ],
   "page": 1,
   "per_page": 10,
@@ -89,9 +103,12 @@ projet
 ```
 ~/projets/CC-Beacon/          ← ce repo
 ├── docs/
-│   └── work-in-progress/     ← notes de planification
+│   └── work-in-progress/     ← notes de planification (gitignored)
+├── ops/
+│   ├── docker-compose.yml    ← container nginx + labels Traefik
+│   └── default.conf.template ← config nginx, token injecté via envsubst
 ├── scripts/
-│   └── update_work.sh        ← script de déploiement rsync (lit ~/.CC-Beacon/config.json)
+│   └── update_work.sh        ← script de déploiement rsync
 ├── web/
 │   └── index.html            ← interface mobile
 ├── config.example.json       ← template versionné (sans valeurs sensibles)
@@ -99,7 +116,10 @@ projet
 └── README.md
 
 ~/.CC-Beacon/                 ← hors repo, jamais commité
-└── config.json               ← valeurs réelles : hôte VPS, user SSH, token, labels sl1
+├── config.json               ← valeurs réelles : hôte VPS, user SSH, token, etc.
+└── works/                    ← fichiers work locaux synchronisés vers le VPS
+    ├── index.json
+    └── <id>.json
 ```
 
 ---
@@ -110,11 +130,11 @@ projet
 
 ```json
 {
-  "vps_host": "votre-hote-ou-ip-vps",
-  "vps_user": "votre-user-ssh",
+  "vps_host": "your-vps-hostname-or-ip",
+  "vps_user": "your-ssh-user",
   "remote_path": "/var/www/CC-Beacon/works/",
-  "token": "votre-token-secret",
-  "base_url": "https://beacon.votre-domaine.com",
+  "token": "your-secret-token",
+  "base_url": "https://beacon.your-domain.com",
   "sl1_label": "module"
 }
 ```
@@ -125,20 +145,39 @@ projet
 
 ## Configuration du VPS
 
-Le VPS sert les fichiers statiques via un container nginx derrière Traefik :
+La structure sur le VPS reflète le dossier `ops/` du repo :
 
-- Les fichiers sont stockés dans `/var/www/CC-Beacon/works/`
-- nginx les expose sous `/TOKEN/` (le token sert de préfixe de chemin secret)
-- Traefik gère le sous-domaine (`beacon.votre-domaine.com`) et le TLS via Let's Encrypt
-- L'utilisateur SSH utilisé par rsync doit avoir les droits d'écriture sur le dossier `works/`
+```
+~/your-traefik-basedir/cc-beacon/
+├── compose/
+│   └── docker-compose.yml          ← adapté depuis ops/ (vrai domaine)
+└── shared/
+    ├── env/
+    │   └── secrets.env             ← TOKEN=votre-token (jamais commité)
+    ├── nginx/
+    │   └── default.conf.template   ← copie de ops/default.conf.template
+    └── www/
+        ├── index.html              ← copie de web/index.html
+        └── works/                  ← cible rsync
+```
 
-La configuration détaillée est couverte dans le document de planification Phase 2 (`docs/work-in-progress/`).
+Le container nginx utilise le mécanisme `envsubst` natif de l'image `nginx:alpine` : `default.conf.template` est traité au démarrage et `${TOKEN}` est remplacé par la valeur de `secrets.env`. Le token n'est jamais écrit en clair dans un fichier commité.
+
+Générer un token :
+```bash
+openssl rand -hex 24
+```
+
+Démarrer le container :
+```bash
+cd ~/your-traefik-basedir/cc-beacon/compose && docker compose up -d
+```
 
 ---
 
 ## Intégration Claude Code
 
-Ajouter le hook suivant dans `~/.claude/settings.json` pour que le script s'exécute automatiquement à la fin de chaque session Claude Code :
+Ajouter le hook suivant dans `~/.claude/settings.json` pour que le script se synchronise automatiquement en fin de session :
 
 ```json
 {
@@ -149,7 +188,7 @@ Ajouter le hook suivant dans `~/.claude/settings.json` pour que le script s'exé
         "hooks": [
           {
             "type": "command",
-            "command": "~/projets/CC-Beacon/scripts/update_work.sh"
+            "command": "~/projets/CC-Beacon/scripts/update_work.sh --sync-only"
           }
         ]
       }
@@ -157,6 +196,8 @@ Ajouter le hook suivant dans `~/.claude/settings.json` pour que le script s'exé
   }
 }
 ```
+
+Le flag `--sync-only` ignore la création de fichier et lance uniquement le rsync — c'est un filet de sécurité. Pendant la session, appeler le script explicitement avec les arguments complets pour créer et mettre à jour le work.
 
 ---
 
@@ -168,19 +209,22 @@ Ajouter le hook suivant dans `~/.claude/settings.json` pour que le script s'exé
 |-----|-------------|
 | **Projets** | Liste des projets avec barre de progression agrégée |
 | **SL1** | Liste des sl1 d'un projet avec progression pondérée |
-| **Works** | Liste paginée des works d'un sl1 avec détail des steps |
+| **Works** | Liste paginée des works d'un sl1, détail des steps sur tap |
 
-Quand un work a le statut `in_progress`, la page se rafraîchit automatiquement toutes les 30 secondes.
+- Works terminés : `Terminé le JJ/MM HH:mm · X min`
+- Works en cours avec steps avancés : `Fin estimée dans X min`
+- Works en cours sans steps done : `En cours depuis X min`
+- Quand un work a le statut `in_progress`, la page se rafraîchit automatiquement toutes les 30 secondes
 
 ---
 
 ## Feuille de route
 
-- [ ] **Phase 1** — Structure du repo et contenu des fichiers
-- [ ] **Phase 2** — Configuration VPS : nginx, labels Traefik, arborescence
-- [ ] **Phase 3** — Scripts et hooks : `config.example.json`, `update_work.sh`, hook `settings.json`
-- [ ] **Phase 4** — Interface mobile : `web/index.html`
-- [ ] **Phase 5** — Section CLAUDE.md décrivant CC-Beacon pour les sessions futures
+- [x] **Phase 1** — Structure du repo et contenu des fichiers
+- [x] **Phase 2** — Configuration VPS : nginx, labels Traefik, arborescence
+- [x] **Phase 3** — Scripts et hooks : `config.example.json`, `update_work.sh`, hook `settings.json`
+- [x] **Phase 4** — Interface mobile : `web/index.html`
+- [x] **Phase 5** — Section CLAUDE.md décrivant CC-Beacon pour les sessions futures
 
 ---
 
