@@ -14,6 +14,9 @@ set -euo pipefail
 #     --summary "Optional free text" \
 #     [--id "2026-06-03T10-00-00"]
 #
+#   update_work.sh --sync-only
+#     Skips file creation — rsync only. Used by the Claude Code Stop hook.
+#
 # Reads: ~/.CC-Beacon/config.json
 # Writes: ~/.CC-Beacon/works/<id>.json  +  ~/.CC-Beacon/works/index.json
 # Pushes: rsync -az ~/.CC-Beacon/works/ user@host:remote_path
@@ -43,6 +46,16 @@ fi
 VPS_HOST=$(jq -r '.vps_host' "$CONFIG_FILE")
 VPS_USER=$(jq -r '.vps_user' "$CONFIG_FILE")
 REMOTE_PATH=$(jq -r '.remote_path' "$CONFIG_FILE")
+
+# --- Sync-only mode (Stop hook) ---------------------------------------------
+
+if [[ "${1:-}" == "--sync-only" ]]; then
+  if [[ -d "$WORKS_DIR" ]]; then
+    rsync -az "${WORKS_DIR}/" "${VPS_USER}@${VPS_HOST}:${REMOTE_PATH}"
+    echo "✓ CC-Beacon sync done."
+  fi
+  exit 0
+fi
 
 # --- Parse arguments --------------------------------------------------------
 
