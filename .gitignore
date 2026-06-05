@@ -1,45 +1,25 @@
-*.log
+# OS
 .DS_Store
-.env
-.env.backup
-.env.production
-.env.testing
-.phpactor.json
-.phpunit.result.cache
-/.fleet
-/.idea
-/.nova
-/.phpunit.cache
-/.vscode
-/.zed
-/auth.json
-/node_modules
-/public/build
-/public/hot
-/public/storage
-/storage/*.key
-/storage/pail
-/vendor
-Homestead.json
-Homestead.yaml
 Thumbs.db
 
+# IDE
+.fleet
+.idea
+.nova
+.vscode
+.zed
+
+# Logs
+*.log
+
+# Git keepfile helper
 !.gitkeep
 
-# Db
-database.sqlite
+# Safety net — never commit a real config with secrets
+config.json
 
-# E2E environment
-.env.e2e
-
-# Test artifacts
-coverage.xml
-coverage-frontend/
-playwright-report/
-test-results/
-.env.prod
-
+# CC-Beacon planning notes (work in progress, not part of the versioned project)
 docs/work-in-progress
 
-# Claude Code
+# Claude Code session metadata
 CLAUDE.md
