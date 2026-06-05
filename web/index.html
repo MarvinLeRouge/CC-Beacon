@@ -524,18 +524,18 @@ function fmtDate(iso) {
 }
 
 function cardMeta(w) {
-  const parts = [];
   if (w.status === 'done' && w.completion_time) {
-    parts.push('Terminé le ' + fmtDate(w.completion_time));
+    const parts = ['Terminé le ' + fmtDate(w.completion_time)];
     if (duration(w)) parts.push(duration(w));
-  } else if (w.status === 'in_progress') {
-    const end = estimatedEnd(w);
-    if (end) parts.push('Fin estimée ' + fmtTime(end));
-    if (duration(w)) parts.push(duration(w));
-  } else {
-    parts.push(fmtDate(w.updated_at));
+    return parts.join(' · ');
   }
-  return parts.join(' · ');
+  if (w.status === 'in_progress') {
+    const end = estimatedEnd(w);
+    if (end) return 'Fin estimée ' + fmtTime(end);
+    if (duration(w)) return 'En cours depuis ' + duration(w);
+    return 'En cours';
+  }
+  return fmtDate(w.updated_at);
 }
 
 // ---------------------------------------------------------------------------
