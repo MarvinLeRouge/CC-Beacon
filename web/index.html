@@ -224,14 +224,21 @@ function sl1Progress(sl1Works) {
   if (!sl1Works.length) return 0;
   const done = sl1Works.filter(w => w.status === 'done');
 
-  if (done.length < 2) {
-    return done.length / sl1Works.length;
-  }
+  // All done → 100 % regardless of duration data
+  if (done.length === sl1Works.length) return 1;
 
+  // Phase 1: fewer than 2 completed works
+  if (done.length < 2) return done.length / sl1Works.length;
+
+  // Phase 2: weighted by actual duration
   const durations = done.map(w =>
     new Date(w.updated_at) - new Date(w.started_at)
   );
   const avg = durations.reduce((a, b) => a + b, 0) / durations.length;
+
+  // Fallback to simple ratio if durations are all zero (e.g. test data)
+  if (avg === 0) return done.length / sl1Works.length;
+
   const numerator   = durations.reduce((a, b) => a + b, 0);
   const denominator = sl1Works.reduce((sum, w) => {
     if (w.status === 'done') return sum + (new Date(w.updated_at) - new Date(w.started_at));
