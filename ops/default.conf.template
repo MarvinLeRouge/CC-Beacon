@@ -1,13 +1,11 @@
 server {
     listen 80;
 
-    # Deny everything not under the token path
     location / {
         return 404;
     }
 
-    # Replace YOUR_SECRET_TOKEN with the value from ~/.CC-Beacon/config.json
-    location /YOUR_SECRET_TOKEN/ {
+    location /${TOKEN}/ {
         alias /var/www/cc-beacon/;
         index index.html;
         add_header Cache-Control "no-store, no-cache, must-revalidate";

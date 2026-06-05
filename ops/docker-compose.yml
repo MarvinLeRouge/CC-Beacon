@@ -8,8 +8,10 @@ services:
   nginx:
     image: nginx:alpine
     restart: unless-stopped
+    env_file:
+      - ../shared/env/secrets.env
     volumes:
-      - ../shared/nginx/default.conf:/etc/nginx/conf.d/default.conf:ro
+      - ../shared/nginx/default.conf.template:/etc/nginx/templates/default.conf.template:ro
       - ../shared/www:/var/www/cc-beacon:ro
     networks:
       - traefik-public
