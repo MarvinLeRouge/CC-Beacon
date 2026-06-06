@@ -25,6 +25,31 @@ projet
 
 ---
 
+## 📸 Copies d'écran
+
+### Vue projets
+
+[![Vue projets](docs/screenshots/projects.png)](docs/screenshots/projects.png)
+
+### Vue SL1 — Tous les modules d'un projet
+
+[![Vue SL1 — Tous les modules d'un projet](docs/screenshots/sl1.png)](docs/screenshots/sl1.png)
+
+### Vue works — Tous les works repliés
+
+[![Vue works — Tous les works repliés](docs/screenshots/works.png)](docs/screenshots/works.png)
+
+### Vue works — Work fini déplié
+
+[![Vue works — Work fini déplié](docs/screenshots/work-done.png)](docs/screenshots/work-done.png)
+
+### Vue works — Work en cours déplié
+
+[![Vue works — Work en cours déplié](docs/screenshots/work-in-progress.png)](docs/screenshots/work-in-progress.png)
+
+---
+
+
 ## Fonctionnement
 
 1. **Hook Claude Code** — un hook `Stop` dans `~/.claude/settings.json` appelle `scripts/update_work.sh --sync-only` à la fin de chaque session
