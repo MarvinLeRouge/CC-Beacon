@@ -18,19 +18,8 @@ services:
     labels:
       - "traefik.enable=true"
       - "traefik.docker.network=traefik-public"
-
-      # HTTPS router
-      - "traefik.http.routers.cc-beacon.rule=Host(`cc-beacon.your-domain.com`)"
+      - "traefik.http.routers.cc-beacon.rule=Host(`${DOMAIN}`)"
       - "traefik.http.routers.cc-beacon.entrypoints=websecure"
       - "traefik.http.routers.cc-beacon.tls=true"
       - "traefik.http.routers.cc-beacon.tls.certresolver=letsencrypt"
-
-      # HTTP → HTTPS redirect
-      - "traefik.http.routers.cc-beacon-http.rule=Host(`cc-beacon.your-domain.com`)"
-      - "traefik.http.routers.cc-beacon-http.entrypoints=web"
-      - "traefik.http.routers.cc-beacon-http.middlewares=cc-beacon-https-redirect"
-      - "traefik.http.middlewares.cc-beacon-https-redirect.redirectscheme.scheme=https"
-      - "traefik.http.middlewares.cc-beacon-https-redirect.redirectscheme.permanent=true"
-
-      # Internal port served by nginx
       - "traefik.http.services.cc-beacon.loadbalancer.server.port=80"
