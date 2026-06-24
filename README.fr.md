@@ -128,14 +128,15 @@ projet
 ```
 ~/projets/CC-Beacon/          ← ce repo
 ├── docs/
-│   └── work-in-progress/     ← notes de planification (gitignored)
+│   └── ai/                   ← notes de travail IA (gitignored)
 ├── ops/
-│   ├── docker-compose.yml    ← container nginx + labels Traefik
+│   ├── compose.env.example   ← template pour compose/.env sur le VPS
 │   └── default.conf.template ← config nginx, token injecté via envsubst
 ├── scripts/
 │   └── update_work.sh        ← script de déploiement rsync
 ├── web/
 │   └── index.html            ← interface mobile
+├── docker-compose.prod.yml   ← container nginx + labels Traefik (prod)
 ├── config.example.json       ← template versionné (sans valeurs sensibles)
 ├── .gitignore
 └── README.md
@@ -170,12 +171,11 @@ projet
 
 ## Configuration du VPS
 
-La structure sur le VPS reflète le dossier `ops/` du repo :
-
 ```
 ~/your-traefik-basedir/cc-beacon/
 ├── compose/
-│   └── docker-compose.yml          ← adapté depuis ops/ (vrai domaine)
+│   ├── docker-compose.yml          ← copie de docker-compose.prod.yml
+│   └── .env                        ← DOMAIN=votre-domaine.com (jamais commité)
 └── shared/
     ├── env/
     │   └── secrets.env             ← TOKEN=votre-token (jamais commité)
@@ -186,7 +186,11 @@ La structure sur le VPS reflète le dossier `ops/` du repo :
         └── works/                  ← cible rsync
 ```
 
-Le container nginx utilise le mécanisme `envsubst` natif de l'image `nginx:alpine` : `default.conf.template` est traité au démarrage et `${TOKEN}` est remplacé par la valeur de `secrets.env`. Le token n'est jamais écrit en clair dans un fichier commité.
+**Deux fichiers d'environnement distincts, deux rôles distincts :**
+- `compose/.env` — lu par `docker compose` au démarrage pour l'interpolation des labels (`${DOMAIN}` dans les labels Traefik). Voir `ops/compose.env.example` pour le template.
+- `shared/env/secrets.env` — transmis au container nginx à l'exécution ; `${TOKEN}` est substitué dans `default.conf.template` via `envsubst`.
+
+Aucun des deux fichiers n'est jamais commité.
 
 Générer un token :
 ```bash
