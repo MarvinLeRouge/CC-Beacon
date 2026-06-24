@@ -18,8 +18,8 @@ Thumbs.db
 # Safety net — never commit a real config with secrets
 config.json
 
-# CC-Beacon planning notes (work in progress, not part of the versioned project)
-docs/work-in-progress
+# AI working notes (not part of the versioned project)
+docs/ai/
 
 # Claude Code session metadata
 CLAUDE.md
