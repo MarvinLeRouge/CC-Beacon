@@ -9,6 +9,5 @@ server {
         alias /var/www/cc-beacon/;
         index index.html;
         add_header Cache-Control "no-store, no-cache, must-revalidate";
-        try_files $uri $uri/ =404;
     }
 }

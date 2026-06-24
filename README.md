@@ -127,14 +127,15 @@ project
 ```
 ~/projets/CC-Beacon/          ← this repo
 ├── docs/
-│   └── work-in-progress/     ← planning notes (gitignored)
+│   └── ai/                   ← AI working notes (gitignored)
 ├── ops/
-│   ├── docker-compose.yml    ← nginx container + Traefik labels
+│   ├── compose.env.example   ← template for compose/.env on the VPS
 │   └── default.conf.template ← nginx config, token injected via envsubst
 ├── scripts/
 │   └── update_work.sh        ← rsync deployment script
 ├── web/
 │   └── index.html            ← mobile interface
+├── docker-compose.prod.yml   ← nginx container + Traefik labels (prod)
 ├── config.example.json       ← versioned template (no sensitive values)
 ├── .gitignore
 └── README.md
@@ -169,12 +170,11 @@ project
 
 ## VPS setup
 
-The VPS structure mirrors the repo's `ops/` directory:
-
 ```
 ~/your-traefik-basedir/cc-beacon/
 ├── compose/
-│   └── docker-compose.yml          ← adapted from ops/ (real domain)
+│   ├── docker-compose.yml          ← copy of docker-compose.prod.yml
+│   └── .env                        ← DOMAIN=your-domain.com (never committed)
 └── shared/
     ├── env/
     │   └── secrets.env             ← TOKEN=your-secret-token (never committed)
@@ -185,7 +185,11 @@ The VPS structure mirrors the repo's `ops/` directory:
         └── works/                  ← rsync target
 ```
 
-The nginx container uses the official `nginx:alpine` image's built-in `envsubst` mechanism: `default.conf.template` is processed at startup and `${TOKEN}` is replaced with the value from `secrets.env`. The token is never written in plain text in any committed file.
+**Two separate env files, two separate purposes:**
+- `compose/.env` — read by `docker compose` at startup for label interpolation (`${DOMAIN}` in Traefik labels). See `ops/compose.env.example` for the template.
+- `shared/env/secrets.env` — passed to the nginx container at runtime; `${TOKEN}` is substituted into `default.conf.template` via `envsubst`.
+
+Neither file is ever committed.
 
 Generate a token with:
 ```bash
