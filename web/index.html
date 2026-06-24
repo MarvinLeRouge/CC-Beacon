@@ -538,6 +538,13 @@ function cardMeta(w) {
   return fmtDate(w.updated_at);
 }
 
+document.addEventListener('visibilitychange', () => {
+  if (!document.hidden && allWorks.some(w => w.status === 'in_progress')) {
+    clearTimeout(refreshTimer);
+    reload();
+  }
+});
+
 // ---------------------------------------------------------------------------
 // Init
 // ---------------------------------------------------------------------------
