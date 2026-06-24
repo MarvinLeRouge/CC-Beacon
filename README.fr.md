@@ -56,6 +56,7 @@ projet
 2. **rsync via SSH** — le script pousse les fichiers JSON et un index régénéré vers le VPS
 3. **nginx + Traefik** — les fichiers statiques sont servis sous un chemin secret (`/TOKEN/`), derrière un reverse proxy Traefik avec TLS automatique ; le token est injecté au démarrage du container via `envsubst`
 4. **Interface mobile** — `web/index.html` récupère l'index et affiche les vues projet/sl1/work avec pagination et rafraîchissement automatique quand un work est `in_progress`
+5. **Deploy CI/CD** — un push sur `main` déclenche `.github/workflows/deploy.yml`, qui récupère `web/index.html`, `ops/default.conf.template` et `docker-compose.prod.yml` depuis GitHub au SHA exact du commit et les applique sur le VPS
 
 ---
 
@@ -127,6 +128,9 @@ projet
 
 ```
 ~/projets/CC-Beacon/          ← ce repo
+├── .github/
+│   └── workflows/
+│       └── deploy.yml        ← CI/CD : déploie sur le VPS à chaque push sur main
 ├── docs/
 │   └── ai/                   ← notes de travail IA (gitignored)
 ├── ops/
