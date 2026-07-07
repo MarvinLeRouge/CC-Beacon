@@ -15,10 +15,37 @@
       --muted:     #6b7280;
       --accent:    #2563eb;
       --green:     #16a34a;
-      --orange:    #d97706;
+      --orange:    #b45309;
       --red:       #dc2626;
       --radius:    10px;
       --shadow:    0 1px 3px rgba(0,0,0,.08);
+    }
+
+    @media (prefers-color-scheme: dark) {
+      :root {
+        --bg:      #111827;
+        --surface: #1f2937;
+        --border:  #374151;
+        --text:    #f9fafb;
+        --muted:   #9ca3af;
+        --accent:  #60a5fa;
+        --green:   #4ade80;
+        --orange:  #fbbf24;
+        --red:     #f87171;
+        --shadow:  0 1px 3px rgba(0,0,0,.4);
+      }
+    }
+    :root[data-theme="dark"] {
+      --bg:      #111827;
+      --surface: #1f2937;
+      --border:  #374151;
+      --text:    #f9fafb;
+      --muted:   #9ca3af;
+      --accent:  #60a5fa;
+      --green:   #4ade80;
+      --orange:  #fbbf24;
+      --red:     #f87171;
+      --shadow:  0 1px 3px rgba(0,0,0,.4);
     }
 
     body {
@@ -99,6 +126,19 @@
     .badge-in_progress { background: #dbeafe; color: #1d4ed8; }
     .badge-done        { background: #dcfce7; color: #15803d; }
     .badge-error       { background: #fee2e2; color: #b91c1c; }
+
+    @media (prefers-color-scheme: dark) {
+      .badge-pending     { background: #374151; color: #d1d5db; }
+      .badge-in_progress { background: #1e3a5f; color: #93c5fd; }
+      .badge-done        { background: #14532d; color: #86efac; }
+      .badge-error       { background: #7f1d1d; color: #fca5a5; }
+      .error-banner      { background: #7f1d1d; color: #fca5a5; }
+    }
+    :root[data-theme="dark"] .badge-pending     { background: #374151; color: #d1d5db; }
+    :root[data-theme="dark"] .badge-in_progress { background: #1e3a5f; color: #93c5fd; }
+    :root[data-theme="dark"] .badge-done        { background: #14532d; color: #86efac; }
+    :root[data-theme="dark"] .badge-error       { background: #7f1d1d; color: #fca5a5; }
+    :root[data-theme="dark"] .error-banner      { background: #7f1d1d; color: #fca5a5; }
 
     /* ── Steps ── */
     .steps-toggle {
