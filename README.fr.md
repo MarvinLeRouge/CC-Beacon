@@ -6,7 +6,12 @@
 
 > *Un outil léger de suivi de tâches Claude Code — fichiers JSON déposés sur un VPS via rsync, servis derrière Traefik, consultables depuis un smartphone.*
 
-![Statut](https://img.shields.io/badge/Statut-Livré-brightgreen)
+![Statut](https://img.shields.io/badge/Statut-production-brightgreen)
+![JavaScript](https://img.shields.io/badge/JavaScript-ES2022-F7DF1E?logo=javascript&logoColor=black)
+![nginx](https://img.shields.io/badge/nginx-alpine-009639?logo=nginx&logoColor=white)
+![Docker](https://img.shields.io/badge/Docker-ready-2496ED?logo=docker&logoColor=white)
+[![Deploy](https://github.com/MarvinLeRouge/CC-Beacon/actions/workflows/deploy.yml/badge.svg)](https://github.com/MarvinLeRouge/CC-Beacon/actions/workflows/deploy.yml)
+![Licence](https://img.shields.io/github/license/MarvinLeRouge/CC-Beacon?cacheSeconds=3600)
 
 ---
 
