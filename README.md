@@ -6,7 +6,12 @@
 
 > *A lightweight Claude Code task tracker — structured JSON files deployed to a VPS via rsync, served behind Traefik, and readable from any smartphone.*
 
-![Status](https://img.shields.io/badge/Status-Delivered-brightgreen)
+![Status](https://img.shields.io/badge/Status-production-brightgreen)
+![JavaScript](https://img.shields.io/badge/JavaScript-ES2022-F7DF1E?logo=javascript&logoColor=black)
+![nginx](https://img.shields.io/badge/nginx-alpine-009639?logo=nginx&logoColor=white)
+![Docker](https://img.shields.io/badge/Docker-ready-2496ED?logo=docker&logoColor=white)
+[![Deploy](https://github.com/MarvinLeRouge/CC-Beacon/actions/workflows/deploy.yml/badge.svg)](https://github.com/MarvinLeRouge/CC-Beacon/actions/workflows/deploy.yml)
+![License](https://img.shields.io/github/license/MarvinLeRouge/CC-Beacon?cacheSeconds=3600)
 
 ---
 
