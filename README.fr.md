@@ -55,8 +55,8 @@ projet
 1. **Hook Claude Code** — un hook `Stop` dans `~/.claude/settings.json` appelle `scripts/update_work.sh --sync-only` à la fin de chaque session
 2. **rsync via SSH** — le script pousse les fichiers JSON et un index régénéré vers le VPS
 3. **nginx + Traefik** — les fichiers statiques sont servis sous un chemin secret (`/TOKEN/`), derrière un reverse proxy Traefik avec TLS automatique ; le token est injecté au démarrage du container via `envsubst`
-4. **Interface mobile** — `web/index.html` récupère l'index et affiche les vues projet/sl1/work avec pagination et rafraîchissement automatique quand un work est `in_progress`
-5. **Deploy CI/CD** — un push sur `main` déclenche `.github/workflows/deploy.yml`, qui récupère `web/index.html`, `ops/default.conf.template` et `docker-compose.prod.yml` depuis GitHub au SHA exact du commit et les applique sur le VPS
+4. **Interface mobile** — `web/index.html` + `web/app.js` récupèrent l'index et affichent les vues projet/sl1/work avec pagination et rafraîchissement automatique quand un work est `in_progress`
+5. **Deploy CI/CD** — un push sur `main` déclenche `.github/workflows/deploy.yml`, qui récupère `web/index.html`, `web/app.js`, `ops/default.conf.template` et `docker-compose.prod.yml` depuis GitHub au SHA exact du commit et les applique sur le VPS
 
 ---
 
@@ -139,7 +139,8 @@ projet
 ├── scripts/
 │   └── update_work.sh        ← script de déploiement rsync
 ├── web/
-│   └── index.html            ← interface mobile
+│   ├── index.html            ← interface mobile (HTML + CSS)
+│   └── app.js                ← logique applicative
 ├── docker-compose.prod.yml   ← container nginx + labels Traefik (prod)
 ├── config.example.json       ← template versionné (sans valeurs sensibles)
 ├── .gitignore
@@ -187,6 +188,7 @@ projet
     │   └── default.conf.template   ← copie de ops/default.conf.template
     └── www/
         ├── index.html              ← copie de web/index.html
+        ├── app.js                  ← copie de web/app.js
         └── works/                  ← cible rsync
 ```
 
@@ -236,7 +238,7 @@ Le flag `--sync-only` ignore la création de fichier et lance uniquement le rsyn
 
 ## Interface
 
-`web/index.html` est une application mobile-first en fichier unique (HTML/CSS/JS vanilla, sans étape de build) :
+`web/index.html` + `web/app.js` forment une application mobile-first (HTML/CSS/JS vanilla, sans étape de build). Le mode sombre est supporté via `prefers-color-scheme: dark`.
 
 | Vue | Description |
 |-----|-------------|
@@ -258,6 +260,9 @@ Le flag `--sync-only` ignore la création de fichier et lance uniquement le rsyn
 - [x] **Phase 3** — Scripts et hooks : `config.example.json`, `update_work.sh`, hook `settings.json`
 - [x] **Phase 4** — Interface mobile : `web/index.html`
 - [x] **Phase 5** — Section CLAUDE.md décrivant CC-Beacon pour les sessions futures
+- [x] **Phase 6** — Harmonisation Traefik, correction du deploy prod, CI/CD automatise via GitHub Actions
+- [x] **Phase 7** — Ameliorations interface mobile : mode sombre, contraste WCAG AA, tap targets accessibles, echelle typographique unifiee
+- [x] **Phase 8** — Securite : JS extrait dans `app.js` pour un CSP strict, correction XSS dans `badge()`, token retire des messages d'erreur, headers de securite (CSP, X-Content-Type-Options, X-Frame-Options, Referrer-Policy)
 
 ---
 
