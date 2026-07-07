@@ -34,6 +34,10 @@ jobs:
             curl -fsSL "${REPO_URL}/web/index.html" \
               -o "${DEPLOY_PATH}/shared/www/index.html"
 
+            echo "==> Fetch web/app.js"
+            curl -fsSL "${REPO_URL}/web/app.js" \
+              -o "${DEPLOY_PATH}/shared/www/app.js"
+
             echo "==> Fetch ops/default.conf.template"
             curl -fsSL "${REPO_URL}/ops/default.conf.template" \
               -o "${DEPLOY_PATH}/shared/nginx/default.conf.template"
