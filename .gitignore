@@ -23,3 +23,12 @@ docs/ai/
 
 # Claude Code session metadata
 CLAUDE.md
+
+# Python
+api/.venv/
+api/__pycache__/
+api/**/__pycache__/
+*.pyc
+.mypy_cache/
+.ruff_cache/
+.pytest_cache/
