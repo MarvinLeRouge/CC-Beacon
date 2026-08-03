@@ -1,0 +1,110 @@
+name: Build, Push & Deploy
+
+on:
+  # Triggered automatically when CI passes on main
+  workflow_run:
+    workflows: ["CI"]
+    types: [completed]
+    branches: [main]
+  # Manual trigger — bypasses the CI gate (hotfixes, rollbacks, redeploys)
+  workflow_dispatch: {}
+
+permissions:
+  contents: read
+  packages: write
+
+jobs:
+  # ---------------------------------------------------------------------------
+  # Job 1 — Build the Docker image and push it to GHCR
+  # ---------------------------------------------------------------------------
+  build-and-push:
+    runs-on: ubuntu-latest
+    # On workflow_run: only proceed if CI succeeded
+    # On workflow_dispatch: always proceed
+    if: >
+      github.event_name == 'workflow_dispatch' ||
+      github.event.workflow_run.conclusion == 'success'
+    outputs:
+      image_tag: ${{ steps.meta.outputs.tag }}
+      head_sha: ${{ steps.meta.outputs.sha }}
+
+    steps:
+      - name: Resolve commit SHA
+        id: meta
+        run: |
+          SHA="${{ github.event.workflow_run.head_sha || github.sha }}"
+          echo "tag=sha-${SHA::7}" >> $GITHUB_OUTPUT
+          echo "sha=${SHA}" >> $GITHUB_OUTPUT
+
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ steps.meta.outputs.sha }}
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Login to GHCR
+        uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Build & push — api
+        uses: docker/build-push-action@v6
+        with:
+          context: .
+          file: ./api/Dockerfile
+          push: true
+          tags: |
+            ghcr.io/marvinlerouge/cc-beacon-api:${{ steps.meta.outputs.tag }}
+            ghcr.io/marvinlerouge/cc-beacon-api:latest
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+
+  # ---------------------------------------------------------------------------
+  # Job 2 — Deploy to production over SSH
+  # ---------------------------------------------------------------------------
+  deploy:
+    runs-on: ubuntu-latest
+    needs: build-and-push
+
+    steps:
+      - name: Deploy over SSH
+        uses: appleboy/ssh-action@v1.2.0
+        env:
+          GHCR_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GHCR_USER: ${{ github.actor }}
+          IMAGE_TAG: ${{ needs.build-and-push.outputs.image_tag }}
+          GITHUB_SHA: ${{ needs.build-and-push.outputs.head_sha }}
+          GITHUB_REPOSITORY: ${{ github.repository }}
+          DEPLOY_PATH: /home/mlr/marvinlerouge.dev/cc-beacon
+        with:
+          host: ${{ secrets.DEPLOY_SSH_HOST }}
+          username: ${{ secrets.DEPLOY_SSH_USER }}
+          key: ${{ secrets.DEPLOY_SSH_PRIVATE_KEY }}
+          envs: GHCR_TOKEN,GHCR_USER,IMAGE_TAG,GITHUB_SHA,GITHUB_REPOSITORY,DEPLOY_PATH
+          script_stop: true
+          script: |
+            set -Eeuo pipefail
+
+            echo "==> Authenticate to GHCR"
+            echo "${GHCR_TOKEN}" | docker login ghcr.io -u "${GHCR_USER}" --password-stdin
+
+            REPO_URL="https://raw.githubusercontent.com/${GITHUB_REPOSITORY}/${GITHUB_SHA}"
+
+            echo "==> Fetch docker-compose.prod.yml (commit: ${GITHUB_SHA})"
+            curl -fsSL "${REPO_URL}/docker-compose.prod.yml" \
+              -o "${DEPLOY_PATH}/compose/docker-compose.yml"
+
+            cd "${DEPLOY_PATH}/compose"
+
+            echo "==> Pull image (tag: ${IMAGE_TAG})"
+            IMAGE_TAG="${IMAGE_TAG}" docker compose pull
+
+            echo "==> Redeploy stack"
+            IMAGE_TAG="${IMAGE_TAG}" docker compose up -d --remove-orphans
+
+            echo "==> Stack status"
+            docker compose ps
