@@ -1,7 +1,4 @@
 {
-  "vps_host": "your-vps-hostname-or-ip",
-  "vps_user": "your-ssh-user",
-  "remote_path": "~/your-traefik-basedir/cc-beacon/shared/www/works/",
   "token": "your-secret-token",
   "base_url": "https://cc-beacon.your-domain.com",
   "sl1_label": "module"

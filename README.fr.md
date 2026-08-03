@@ -4,20 +4,22 @@
 
 # CC-Beacon
 
-> *Un outil léger de suivi de tâches Claude Code — fichiers JSON déposés sur un VPS via rsync, servis derrière Traefik, consultables depuis un smartphone.*
+> *Un outil léger de suivi de tâches Claude Code — un service FastAPI sur un VPS stockant des fichiers JSON structurés, servi derrière Traefik, consultable depuis un smartphone.*
 
 ![Statut](https://img.shields.io/badge/Statut-production-brightgreen)
 ![JavaScript](https://img.shields.io/badge/JavaScript-ES2022-F7DF1E?logo=javascript&logoColor=black)
-![nginx](https://img.shields.io/badge/nginx-alpine-009639?logo=nginx&logoColor=white)
+![Python](https://img.shields.io/badge/Python-3.11-3776AB?logo=python&logoColor=white)
+![FastAPI](https://img.shields.io/badge/FastAPI-api-009688?logo=fastapi&logoColor=white)
 ![Docker](https://img.shields.io/badge/Docker-ready-2496ED?logo=docker&logoColor=white)
-[![Deploy](https://github.com/MarvinLeRouge/CC-Beacon/actions/workflows/deploy.yml/badge.svg)](https://github.com/MarvinLeRouge/CC-Beacon/actions/workflows/deploy.yml)
+[![CI](https://github.com/MarvinLeRouge/CC-Beacon/actions/workflows/ci.yml/badge.svg)](https://github.com/MarvinLeRouge/CC-Beacon/actions/workflows/ci.yml)
+[![Deploy](https://github.com/MarvinLeRouge/CC-Beacon/actions/workflows/build-push.yml/badge.svg)](https://github.com/MarvinLeRouge/CC-Beacon/actions/workflows/build-push.yml)
 ![Licence](https://img.shields.io/github/license/MarvinLeRouge/CC-Beacon?cacheSeconds=3600)
 
 ---
 
 ## Concept
 
-Les sessions Claude Code produisent un flux d'étapes et de décisions qui disparaissent dès que le terminal se ferme. **CC-Beacon** rend ce travail visible : chaque session écrit un fichier JSON structuré (un *work*) décrivant ses étapes, son statut et sa durée. Ces fichiers sont poussés vers un VPS et affichés via une page HTML mobile-first — pas d'application, pas de framework backend, juste des fichiers statiques et une URL protégée par un token mis en favori.
+Les sessions Claude Code produisent un flux d'étapes et de décisions qui disparaissent dès que le terminal se ferme. **CC-Beacon** rend ce travail visible : chaque session écrit un fichier JSON structuré (un *work*) décrivant ses étapes, son statut et sa durée, poussé en HTTP vers un petit service FastAPI. L'API est l'unique source de vérité : elle stocke les données, calcule l'index et sert elle-même l'interface mobile, le tout derrière une API protégée par token Bearer et une URL mise en favori.
 
 La hiérarchie de suivi est intentionnellement simple :
 
@@ -58,10 +60,10 @@ projet
 ## Fonctionnement
 
 1. **Hook Claude Code** — un hook `Stop` dans `~/.claude/settings.json` appelle `scripts/update_work.sh --sync-only` à la fin de chaque session
-2. **rsync via SSH** — le script pousse les fichiers JSON et un index régénéré vers le VPS
-3. **nginx + Traefik** — les fichiers statiques sont servis sous un chemin secret (`/TOKEN/`), derrière un reverse proxy Traefik avec TLS automatique ; le token est injecté au démarrage du container via `envsubst`
-4. **Interface mobile** — `web/index.html` + `web/app.js` récupèrent l'index et affichent les vues projet/sl1/work avec pagination et rafraîchissement automatique quand un work est `in_progress`
-5. **Deploy CI/CD** — un push sur `main` déclenche `.github/workflows/deploy.yml`, qui récupère `web/index.html`, `web/app.js`, `ops/default.conf.template` et `docker-compose.prod.yml` depuis GitHub au SHA exact du commit et les applique sur le VPS
+2. **Client HTTP** — le script pousse les mises à jour vers l'API (`POST /api/work`) et met en cache l'index renvoyé localement ; plus de SSH, plus de rsync
+3. **FastAPI + Traefik** — un seul container sert l'interface mobile (`GET /`, `GET /app.js`) et l'API REST (`/api/*`, protégée par `Authorization: Bearer`), derrière un reverse proxy Traefik avec TLS automatique
+4. **Interface mobile** — `web/index.html` + `web/app.js` appellent l'API et affichent les vues projet/sl1/work avec pagination, suppression et rafraîchissement automatique quand un work est `in_progress`
+5. **Deploy CI/CD** — un push sur `main` déclenche `.github/workflows/ci.yml` (ruff, mypy, pytest) ; en cas de succès, `.github/workflows/build-push.yml` construit l'image de l'API, la pousse sur GHCR et la déploie sur le VPS via SSH
 
 ---
 
@@ -103,7 +105,7 @@ projet
 
 `completion_time` est fixé une seule fois lors du premier passage à `done` et n'est jamais écrasé.
 
-### Fichier index (régénéré à chaque mise à jour)
+### Index (calculé à la demande par `GET /api/index` à partir des fichiers work — jamais persisté séparément)
 
 ```json
 {
@@ -135,27 +137,36 @@ projet
 ~/projets/CC-Beacon/          ← ce repo
 ├── .github/
 │   └── workflows/
-│       └── deploy.yml        ← CI/CD : déploie sur le VPS à chaque push sur main
+│       ├── ci.yml             ← lint, typage et tests de l'API à chaque push/PR
+│       └── build-push.yml     ← construit et pousse l'image de l'API sur GHCR, déploie via SSH
+├── api/
+│   ├── main.py                ← app FastAPI : sert index.html/app.js, headers de sécurité, /healthz
+│   ├── auth.py                ← dépendance Bearer
+│   ├── models.py               ← modèles Pydantic
+│   ├── routes.py                ← endpoints /api/*
+│   ├── storage.py                ← stockage JSON, index calculé à la volée
+│   ├── tests/                     ← suite pytest
+│   ├── Dockerfile
+│   └── requirements*.txt, pyproject.toml
 ├── docs/
 │   └── ai/                   ← notes de travail IA (gitignored)
 ├── ops/
-│   ├── compose.env.example   ← template pour compose/.env sur le VPS
-│   └── default.conf.template ← config nginx, token injecté via envsubst
+│   └── compose.env.example   ← template pour compose/.env sur le VPS
 ├── scripts/
-│   └── update_work.sh        ← script de déploiement rsync
+│   └── update_work.sh        ← client HTTP pour l'API
 ├── web/
 │   ├── index.html            ← interface mobile (HTML + CSS)
 │   └── app.js                ← logique applicative
-├── docker-compose.prod.yml   ← container nginx + labels Traefik (prod)
+├── docker-compose.prod.yml   ← container api + labels Traefik (prod)
 ├── config.example.json       ← template versionné (sans valeurs sensibles)
+├── .pre-commit-config.yaml
 ├── .gitignore
 └── README.md
 
 ~/.CC-Beacon/                 ← hors repo, jamais commité
-├── config.json               ← valeurs réelles : hôte VPS, user SSH, token, etc.
-└── works/                    ← fichiers work locaux synchronisés vers le VPS
-    ├── index.json
-    └── <id>.json
+├── config.json               ← valeurs réelles : base_url, token
+└── works/
+    └── index.json             ← cache local de l'index de l'API (pas une source de vérité)
 ```
 
 ---
@@ -166,9 +177,6 @@ projet
 
 ```json
 {
-  "vps_host": "your-vps-hostname-or-ip",
-  "vps_user": "your-ssh-user",
-  "remote_path": "/var/www/CC-Beacon/works/",
   "token": "your-secret-token",
   "base_url": "https://beacon.your-domain.com",
   "sl1_label": "module"
@@ -189,17 +197,13 @@ projet
 └── shared/
     ├── env/
     │   └── secrets.env             ← TOKEN=votre-token (jamais commité)
-    ├── nginx/
-    │   └── default.conf.template   ← copie de ops/default.conf.template
-    └── www/
-        ├── index.html              ← copie de web/index.html
-        ├── app.js                  ← copie de web/app.js
-        └── works/                  ← cible rsync
+    └── data/
+        └── works/                  ← stockage persistant de l'API (un fichier JSON par work)
 ```
 
 **Deux fichiers d'environnement distincts, deux rôles distincts :**
 - `compose/.env` — lu par `docker compose` au démarrage pour l'interpolation des labels (`${DOMAIN}` dans les labels Traefik). Voir `ops/compose.env.example` pour le template.
-- `shared/env/secrets.env` — transmis au container nginx à l'exécution ; `${TOKEN}` est substitué dans `default.conf.template` via `envsubst`.
+- `shared/env/secrets.env` — transmis au container `api` sous forme de `TOKEN`, lu directement par l'application FastAPI.
 
 Aucun des deux fichiers n'est jamais commité.
 
@@ -210,7 +214,7 @@ openssl rand -hex 24
 
 Démarrer le container :
 ```bash
-cd ~/your-traefik-basedir/cc-beacon/compose && docker compose up -d
+cd ~/your-traefik-basedir/cc-beacon/compose && docker compose pull && docker compose up -d
 ```
 
 ---
@@ -243,7 +247,7 @@ Le flag `--sync-only` ignore la création de fichier et lance uniquement le rsyn
 
 ## Interface
 
-`web/index.html` + `web/app.js` forment une application mobile-first (HTML/CSS/JS vanilla, sans étape de build). Le mode sombre est supporté via `prefers-color-scheme: dark`.
+`web/index.html` + `web/app.js` forment une application mobile-first (HTML/CSS/JS vanilla, sans étape de build), servie directement par l'API. Le mode sombre est supporté via `prefers-color-scheme: dark`. L'accès est protégé par un token saisi une fois par appareil — mis en cache dans `localStorage`, jamais transporté dans une URL — et envoyé en `Authorization: Bearer` à chaque appel API.
 
 | Vue | Description |
 |-----|-------------|
@@ -255,6 +259,7 @@ Le flag `--sync-only` ignore la création de fichier et lance uniquement le rsyn
 - Works en cours avec steps avancés : `Fin estimée dans X min`
 - Works en cours sans steps done : `En cours depuis X min`
 - Quand un work a le statut `in_progress`, la page se rafraîchit automatiquement toutes les 30 secondes
+- Les projets et sl1 peuvent être supprimés depuis leur vue liste (confirmation requise, action irréversible)
 
 ---
 

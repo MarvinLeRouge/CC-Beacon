@@ -5,14 +5,13 @@ networks:
     external: true
 
 services:
-  nginx:
-    image: nginx:alpine
+  api:
+    image: ghcr.io/marvinlerouge/cc-beacon-api:${IMAGE_TAG:-latest}
     restart: unless-stopped
     env_file:
       - ../shared/env/secrets.env
     volumes:
-      - ../shared/nginx/default.conf.template:/etc/nginx/templates/default.conf.template:ro
-      - ../shared/www:/var/www/cc-beacon:ro
+      - ../shared/data:/data
     networks:
       - traefik-public
     labels:
@@ -22,4 +21,4 @@ services:
       - "traefik.http.routers.cc-beacon.entrypoints=websecure"
       - "traefik.http.routers.cc-beacon.tls=true"
       - "traefik.http.routers.cc-beacon.tls.certresolver=letsencrypt"
-      - "traefik.http.services.cc-beacon.loadbalancer.server.port=80"
+      - "traefik.http.services.cc-beacon.loadbalancer.server.port=8000"
