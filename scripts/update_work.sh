@@ -2,7 +2,7 @@
 set -euo pipefail
 
 # ---------------------------------------------------------------------------
-# update_work.sh — Create/update a CC-Beacon work file and sync to VPS
+# update_work.sh — Create/update a CC-Beacon work via the API
 #
 # Usage:
 #   update_work.sh \
@@ -15,20 +15,23 @@ set -euo pipefail
 #     [--id "2026-06-03T10-00-00"]
 #
 #   update_work.sh --sync-only
-#     Skips file creation — rsync only. Used by the Claude Code Stop hook.
+#     Refreshes the local index.json cache from the API. Used by the Claude
+#     Code Stop hook as a safety net.
 #
-# Reads: ~/.CC-Beacon/config.json
-# Writes: ~/.CC-Beacon/works/<id>.json  +  ~/.CC-Beacon/works/index.json
-# Pushes: rsync -az ~/.CC-Beacon/works/ user@host:remote_path
+# Reads: ${CC_BEACON_CONFIG_FILE:-~/.CC-Beacon/config.json} (base_url, token)
+# Writes: ${CC_BEACON_WORKS_DIR:-~/.CC-Beacon/works}/index.json
+#         (local cache of the API's response — the API itself is the
+#         canonical source of truth)
+# Calls: POST {base_url}/api/work  |  GET {base_url}/api/index
 # ---------------------------------------------------------------------------
 
-CONFIG_FILE="${HOME}/.CC-Beacon/config.json"
-WORKS_DIR="${HOME}/.CC-Beacon/works"
-PER_PAGE=10
+CONFIG_FILE="${CC_BEACON_CONFIG_FILE:-${HOME}/.CC-Beacon/config.json}"
+WORKS_DIR="${CC_BEACON_WORKS_DIR:-${HOME}/.CC-Beacon/works}"
+INDEX_FILE="${WORKS_DIR}/index.json"
 
 # --- Validate dependencies --------------------------------------------------
 
-for cmd in jq rsync; do
+for cmd in jq curl; do
   if ! command -v "$cmd" &>/dev/null; then
     echo "Error: '$cmd' is required but not installed." >&2
     exit 1
@@ -43,17 +46,46 @@ fi
 
 # --- Load config ------------------------------------------------------------
 
-VPS_HOST=$(jq -r '.vps_host' "$CONFIG_FILE")
-VPS_USER=$(jq -r '.vps_user' "$CONFIG_FILE")
-REMOTE_PATH=$(jq -r '.remote_path' "$CONFIG_FILE")
+BASE_URL=$(jq -r '.base_url' "$CONFIG_FILE")
+TOKEN=$(jq -r '.token' "$CONFIG_FILE")
+
+mkdir -p "$WORKS_DIR"
+
+# --- HTTP helper -------------------------------------------------------------
+# Calls the API. On 2xx, writes the response body to $INDEX_FILE.
+# On failure, prints the error and exits 1 without touching $INDEX_FILE.
+
+_call_api() {
+  local method="$1" url="$2" data="${3:-}"
+  local status body_file
+  body_file=$(mktemp)
+
+  if [[ -n "$data" ]]; then
+    status=$(curl -sS -o "$body_file" -w '%{http_code}' -X "$method" "$url" \
+      -H "Authorization: Bearer ${TOKEN}" \
+      -H "Content-Type: application/json" \
+      -d "$data")
+  else
+    status=$(curl -sS -o "$body_file" -w '%{http_code}' -X "$method" "$url" \
+      -H "Authorization: Bearer ${TOKEN}")
+  fi
+
+  if [[ ! "$status" =~ ^2 ]]; then
+    echo "Error: API request failed (HTTP ${status})" >&2
+    cat "$body_file" >&2
+    rm -f "$body_file"
+    exit 1
+  fi
+
+  jq '.' "$body_file" > "$INDEX_FILE"
+  rm -f "$body_file"
+}
 
 # --- Sync-only mode (Stop hook) ---------------------------------------------
 
 if [[ "${1:-}" == "--sync-only" ]]; then
-  if [[ -d "$WORKS_DIR" ]]; then
-    rsync -az "${WORKS_DIR}/" "${VPS_USER}@${VPS_HOST}:${REMOTE_PATH}"
-    echo "✓ CC-Beacon sync done."
-  fi
+  _call_api GET "${BASE_URL}/api/index"
+  echo "✓ CC-Beacon index refreshed."
   exit 0
 fi
 
@@ -85,85 +117,22 @@ if [[ -z "$PROJECT" || -z "$SL1" || -z "$TITLE" ]]; then
   exit 1
 fi
 
-# --- Prepare work file ------------------------------------------------------
-
-mkdir -p "$WORKS_DIR"
-
 if [[ -z "$ID" ]]; then
   ID=$(date -u +%Y-%m-%dT%H-%M-%S)
 fi
 
-WORK_FILE="${WORKS_DIR}/${ID}.json"
-NOW=$(date -u +%Y-%m-%dT%H:%M:%SZ)
+# --- Build payload and push to the API --------------------------------------
 
-if [[ -f "$WORK_FILE" ]]; then
-  STARTED_AT=$(jq -r '.started_at' "$WORK_FILE")
-  # Preserve completion_time if already set and status is still done
-  COMPLETION_TIME=$(jq -r '.completion_time // ""' "$WORK_FILE")
-else
-  STARTED_AT="$NOW"
-  COMPLETION_TIME=""
-fi
+PAYLOAD=$(jq -n \
+  --arg     id      "$ID"      \
+  --arg     project "$PROJECT" \
+  --arg     sl1     "$SL1"     \
+  --arg     title   "$TITLE"   \
+  --arg     status  "$STATUS"  \
+  --argjson steps   "$STEPS"   \
+  --arg     summary "$SUMMARY" \
+  '{id: $id, project: $project, sl1: $sl1, title: $title, status: $status, steps: $steps, summary: $summary}')
 
-# Set completion_time when work is marked done for the first time
-if [[ "$STATUS" == "done" && -z "$COMPLETION_TIME" ]]; then
-  COMPLETION_TIME="$NOW"
-fi
+_call_api POST "${BASE_URL}/api/work" "$PAYLOAD"
 
-jq -n \
-  --arg     id              "$ID"             \
-  --arg     project         "$PROJECT"        \
-  --arg     sl1             "$SL1"            \
-  --arg     title           "$TITLE"          \
-  --arg     status          "$STATUS"         \
-  --arg     started_at      "$STARTED_AT"     \
-  --arg     updated_at      "$NOW"            \
-  --arg     completion_time "$COMPLETION_TIME" \
-  --argjson steps           "$STEPS"          \
-  --arg     summary         "$SUMMARY"        \
-  '{
-    id:              $id,
-    project:         $project,
-    sl1:             $sl1,
-    title:           $title,
-    status:          $status,
-    started_at:      $started_at,
-    updated_at:      $updated_at,
-    completion_time: (if $completion_time == "" then null else $completion_time end),
-    steps:           $steps,
-    summary:         $summary
-  }' > "$WORK_FILE"
-
-# --- Regenerate index -------------------------------------------------------
-
-WORKS_JSON=$(
-  find "$WORKS_DIR" -maxdepth 1 -name "*.json" ! -name "index.json" | sort |
-  xargs -I{} jq '{
-    id:              .id,
-    project:         .project,
-    sl1:             .sl1,
-    title:           .title,
-    status:          .status,
-    started_at:      .started_at,
-    updated_at:      .updated_at,
-    completion_time: .completion_time,
-    step_count:      (.steps | length),
-    steps_done:      ([.steps[] | select(.status == "done")] | length)
-  }' {} |
-  jq -s '.'
-)
-
-TOTAL=$(echo "$WORKS_JSON" | jq 'length')
-
-jq -n \
-  --argjson works    "$WORKS_JSON" \
-  --argjson total    "$TOTAL"      \
-  --argjson per_page "$PER_PAGE"   \
-  '{works:$works, page:1, per_page:$per_page, total:$total}' \
-  > "${WORKS_DIR}/index.json"
-
-# --- Push to VPS ------------------------------------------------------------
-
-rsync -az "${WORKS_DIR}/" "${VPS_USER}@${VPS_HOST}:${REMOTE_PATH}"
-
-echo "✓ Work '${ID}' (${STATUS}) pushed to VPS."
+echo "✓ Work '${ID}' (${STATUS}) synced."
