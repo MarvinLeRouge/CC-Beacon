@@ -1,9 +1,8 @@
 // ---------------------------------------------------------------------------
-// Config — resolved from current page URL so no hardcoded values are needed
+// Config
 // ---------------------------------------------------------------------------
-const BASE  = location.href.replace(/\/[^/]*$/, '/');   // e.g. /TOKEN/
-const INDEX = BASE + 'works/index.json';
-const WORK  = id => BASE + 'works/' + id + '.json';
+const API = '/api';
+const TOKEN_KEY = 'cc-beacon-token';
 
 const PER_PAGE   = 10;
 const REFRESH_MS = 30_000;
@@ -17,19 +16,65 @@ let refreshTimer = null;
 let expandedWork = null;
 
 // ---------------------------------------------------------------------------
+// Token — never carried in a URL, only ever sent as a header
+// ---------------------------------------------------------------------------
+function getToken() { return localStorage.getItem(TOKEN_KEY); }
+function setToken(t) { localStorage.setItem(TOKEN_KEY, t); }
+function clearToken() { localStorage.removeItem(TOKEN_KEY); }
+
+function showTokenGate(message) {
+  clearTimeout(refreshTimer);
+  document.getElementById('page-title').textContent = 'CC-Beacon';
+  document.getElementById('btn-back').hidden = true;
+  document.getElementById('refresh-indicator').hidden = true;
+  render(`
+    <div class="token-gate">
+      ${message ? `<p class="token-gate-error">${esc(message)}</p>` : ''}
+      <p class="token-gate-label">Entre ton token d'accès</p>
+      <form id="token-form">
+        <input type="password" id="token-input" placeholder="Token" autocomplete="off" required>
+        <button type="submit">Valider</button>
+      </form>
+    </div>`);
+  document.getElementById('token-form').addEventListener('submit', e => {
+    e.preventDefault();
+    const value = document.getElementById('token-input').value.trim();
+    if (!value) return;
+    setToken(value);
+    boot();
+  });
+}
+
+// ---------------------------------------------------------------------------
 // Data
 // ---------------------------------------------------------------------------
-async function fetchIndex() {
-  const r = await fetch(INDEX + '?_=' + Date.now());
+async function apiFetch(path, options = {}) {
+  const headers = { ...(options.headers || {}), Authorization: `Bearer ${getToken()}` };
+  const r = await fetch(API + path, { ...options, headers });
+  if (r.status === 401) {
+    clearToken();
+    showTokenGate('Token invalide, réessaie.');
+    throw new Error('Unauthorized');
+  }
   if (!r.ok) throw new Error('HTTP ' + r.status);
-  const data = await r.json();
+  return r.json();
+}
+
+async function fetchIndex() {
+  const data = await apiFetch('/index');
   return data.works || [];
 }
 
 async function fetchWork(id) {
-  const r = await fetch(WORK(id) + '?_=' + Date.now());
-  if (!r.ok) throw new Error('HTTP ' + r.status);
-  return r.json();
+  return apiFetch('/work/' + encodeURIComponent(id));
+}
+
+async function deleteProject(project) {
+  return apiFetch('/project/' + encodeURIComponent(project), { method: 'DELETE' });
+}
+
+async function deleteSl1(project, sl1) {
+  return apiFetch('/sl1/' + encodeURIComponent(project) + '/' + encodeURIComponent(sl1), { method: 'DELETE' });
 }
 
 // ---------------------------------------------------------------------------
@@ -142,6 +187,14 @@ function fmtTime(date) {
 
 function render(html) { document.getElementById('app').innerHTML = html; }
 
+function flashError(message) {
+  const el = document.createElement('div');
+  el.className = 'error-banner error-banner-toast';
+  el.textContent = message;
+  document.body.appendChild(el);
+  setTimeout(() => el.remove(), 4000);
+}
+
 // ---------------------------------------------------------------------------
 // Navigation
 // ---------------------------------------------------------------------------
@@ -182,6 +235,7 @@ function drawProjects() {
         <div class="card-header">
           <span class="card-title">${esc(project)}</span>
           ${done ? badge('done') : ''}
+          <button class="card-delete" data-action="delete-project" data-project="${esc(project)}" aria-label="Supprimer ${esc(project)}">✕</button>
         </div>
         <div class="card-meta">${sl1s} sl1 · ${pw.length} work${pw.length > 1 ? 's' : ''}</div>
         ${progressBar(prog, done)}
@@ -208,6 +262,7 @@ function drawSl1(project) {
         <div class="card-header">
           <span class="card-title">${esc(sl1)}</span>
           ${done ? badge('done') : ''}
+          <button class="card-delete" data-action="delete-sl1" data-project="${esc(project)}" data-sl1="${esc(sl1)}" aria-label="Supprimer ${esc(sl1)}">✕</button>
         </div>
         <div class="card-meta">${sw.length} work${sw.length > 1 ? 's' : ''} · ${done2} terminé${done2 > 1 ? 's' : ''}</div>
         ${progressBar(prog, done)}
@@ -297,7 +352,7 @@ async function reload() {
   try {
     allWorks = await fetchIndex();
     draw();
-  } catch { /* silent — keep displaying current data */ }
+  } catch { /* silent — keep displaying current data (or the token gate, if apiFetch already swapped to it) */ }
 }
 
 // ---------------------------------------------------------------------------
@@ -331,6 +386,27 @@ document.getElementById('app').addEventListener('click', async e => {
         expandedWork = id;
         draw();
       } catch { /* ignore */ }
+    }
+  } else if (action === 'delete-project') {
+    const project = el.dataset.project;
+    if (!confirm(`Supprimer le projet "${project}" et tous ses works ? Cette action est irréversible.`)) return;
+    try {
+      const index = await deleteProject(project);
+      allWorks = index.works || [];
+      draw();
+    } catch (err) {
+      if (err.message !== 'Unauthorized') flashError('Impossible de supprimer le projet.');
+    }
+  } else if (action === 'delete-sl1') {
+    const project = el.dataset.project;
+    const sl1 = el.dataset.sl1;
+    if (!confirm(`Supprimer le sl1 "${sl1}" et tous ses works ? Cette action est irréversible.`)) return;
+    try {
+      const index = await deleteSl1(project, sl1);
+      allWorks = index.works || [];
+      draw();
+    } catch (err) {
+      if (err.message !== 'Unauthorized') flashError('Impossible de supprimer le sl1.');
     }
   }
 });
@@ -368,7 +444,7 @@ function cardMeta(w) {
 }
 
 document.addEventListener('visibilitychange', () => {
-  if (!document.hidden && allWorks.some(w => w.status === 'in_progress')) {
+  if (!document.hidden && getToken() && allWorks.some(w => w.status === 'in_progress')) {
     clearTimeout(refreshTimer);
     reload();
   }
@@ -377,13 +453,21 @@ document.addEventListener('visibilitychange', () => {
 // ---------------------------------------------------------------------------
 // Init
 // ---------------------------------------------------------------------------
-(async () => {
+async function boot() {
+  if (!getToken()) {
+    showTokenGate();
+    return;
+  }
   try {
     allWorks = await fetchIndex();
     viewStack = [{ name: 'projects' }];
     draw();
-  } catch {
-    render(`<div class="error-banner">Impossible de charger les données.<br>
-      <small>Vérifiez la connexion ou rafraîchissez la page.</small></div>`);
+  } catch (err) {
+    if (err.message !== 'Unauthorized') {
+      render(`<div class="error-banner">Impossible de charger les données.<br>
+        <small>Vérifiez la connexion ou rafraîchissez la page.</small></div>`);
+    }
   }
-})();
+}
+
+boot();

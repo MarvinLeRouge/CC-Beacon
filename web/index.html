@@ -104,6 +104,18 @@
     .card-header { display: flex; justify-content: space-between; align-items: flex-start; gap: 8px; }
     .card-title { font-size: .95rem; font-weight: 600; flex: 1; line-height: 1.3; }
     .card-meta { font-size: .75rem; color: var(--muted); margin-top: 4px; }
+    .card-delete {
+      background: none;
+      border: none;
+      color: var(--muted);
+      font-size: .85rem;
+      cursor: pointer;
+      padding: 4px 8px;
+      line-height: 1;
+      border-radius: 6px;
+      flex-shrink: 0;
+    }
+    .card-delete:active { background: var(--border); color: var(--red); }
 
     /* ── Progress bar ── */
     .progress-wrap { margin-top: 10px; }
@@ -212,6 +224,39 @@
       padding: 12px 16px;
       font-size: .85rem;
       margin-bottom: 12px;
+    }
+    .error-banner-toast {
+      position: fixed;
+      top: 12px;
+      left: 50%;
+      transform: translateX(-50%);
+      z-index: 100;
+      max-width: calc(100% - 32px);
+      box-shadow: var(--shadow);
+    }
+
+    /* ── Token gate ── */
+    .token-gate { max-width: 320px; margin: 80px auto 0; text-align: center; }
+    .token-gate-label { color: var(--muted); font-size: .9rem; margin-bottom: 12px; }
+    .token-gate-error { color: var(--red); font-size: .85rem; margin-bottom: 12px; }
+    .token-gate form { display: flex; gap: 8px; }
+    .token-gate input {
+      flex: 1;
+      padding: 10px 12px;
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      background: var(--surface);
+      color: var(--text);
+      font-size: .9rem;
+    }
+    .token-gate button {
+      padding: 10px 16px;
+      border: none;
+      border-radius: var(--radius);
+      background: var(--accent);
+      color: #fff;
+      font-size: .9rem;
+      cursor: pointer;
     }
   </style>
 </head>
