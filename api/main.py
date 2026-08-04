@@ -9,7 +9,7 @@ from .routes import router
 
 WEB_DIR = Path(__file__).resolve().parent.parent / "web"
 
-app = FastAPI(title="CC-Beacon API")
+app = FastAPI(title="CC-Beacon API", docs_url=None, redoc_url=None, openapi_url=None)
 app.include_router(router)
 
 
@@ -31,6 +31,11 @@ async def security_headers(
     response.headers["X-Frame-Options"] = "DENY"
     response.headers["Referrer-Policy"] = "no-referrer"
     response.headers["Cache-Control"] = "no-store, no-cache, must-revalidate"
+    # Traefik always terminates TLS in front of this service (see
+    # docker-compose.prod.yml — tls=true, certresolver=letsencrypt), so it's
+    # safe to set this unconditionally.
+    response.headers["Strict-Transport-Security"] = "max-age=63072000; includeSubDomains"
+    response.headers["Permissions-Policy"] = "geolocation=(), camera=(), microphone=()"
     return response
 
 
