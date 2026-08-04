@@ -262,7 +262,7 @@ function drawSl1(project) {
         <div class="card-header">
           <span class="card-title">${esc(sl1)}</span>
           ${done ? badge('done') : ''}
-          <button class="card-delete" data-action="delete-sl1" data-project="${esc(project)}" data-sl1="${esc(sl1)}" aria-label="Supprimer ${esc(sl1)}">✕</button>
+          <button class="card-delete" data-action="delete-sl1" data-project="${esc(project)}" data-sl1="${esc(sl1)}" data-last-sl1="${sl1s.length === 1}" aria-label="Supprimer ${esc(sl1)}">✕</button>
         </div>
         <div class="card-meta">${sw.length} work${sw.length > 1 ? 's' : ''} · ${done2} terminé${done2 > 1 ? 's' : ''}</div>
         ${progressBar(prog, done)}
@@ -400,7 +400,11 @@ document.getElementById('app').addEventListener('click', async e => {
   } else if (action === 'delete-sl1') {
     const project = el.dataset.project;
     const sl1 = el.dataset.sl1;
-    if (!confirm(`Supprimer le sl1 "${sl1}" et tous ses works ? Cette action est irréversible.`)) return;
+    const isLastSl1 = el.dataset.lastSl1 === 'true';
+    const message = isLastSl1
+      ? `"${sl1}" est le seul sl1 de "${project}". Le supprimer supprimera aussi le projet. Continuer ?`
+      : `Supprimer le sl1 "${sl1}" et tous ses works ? Cette action est irréversible.`;
+    if (!confirm(message)) return;
     try {
       const index = await deleteSl1(project, sl1);
       allWorks = index.works || [];
