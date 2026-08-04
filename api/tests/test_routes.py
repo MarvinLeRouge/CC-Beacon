@@ -134,3 +134,64 @@ def test_healthz_is_unauthenticated(client):
     response = client.get("/healthz")
     assert response.status_code == 200
     assert response.json() == {"status": "ok"}
+
+
+def test_get_index_ignores_a_stray_legacy_index_file(client, auth_headers, tmp_path):
+    # Regression: the pre-migration rsync-era client used to write its own
+    # index.json into the same directory as the work files. A leftover one
+    # (wrong shape, no "id" key) must not crash the API-computed index.
+    works_dir = tmp_path / "works"
+    works_dir.mkdir(parents=True, exist_ok=True)
+    (works_dir / "index.json").write_text('{"works": [], "page": 1, "per_page": 10, "total": 0}')
+
+    client.post(
+        "/api/work",
+        json={"id": "2026-01-01T00-00-00", "project": "demo", "sl1": "api", "title": "a"},
+        headers=auth_headers,
+    )
+
+    response = client.get("/api/index", headers=auth_headers)
+
+    assert response.status_code == 200
+    body = response.json()
+    assert body["total"] == 1
+    assert body["works"][0]["id"] == "2026-01-01T00-00-00"
+
+
+def test_unhandled_exception_returns_generic_500_without_leaking_details(
+    client, auth_headers, monkeypatch
+):
+    # Starlette's ServerErrorMiddleware re-raises after a registered Exception
+    # handler responds, so the client's default TestClient must not re-raise
+    # in-process — we only care about what the HTTP client actually receives.
+    from fastapi.testclient import TestClient
+
+    def boom() -> None:
+        raise RuntimeError("boom: sensitive internal detail")
+
+    monkeypatch.setattr("api.storage.build_index", boom)
+
+    lenient_client = TestClient(client.app, raise_server_exceptions=False)
+    response = lenient_client.get("/api/index", headers=auth_headers)
+
+    assert response.status_code == 500
+    assert response.json() == {"detail": "Internal server error"}
+
+
+def test_get_index_skips_a_malformed_work_file_instead_of_crashing(client, auth_headers, tmp_path):
+    works_dir = tmp_path / "works"
+    works_dir.mkdir(parents=True, exist_ok=True)
+    (works_dir / "corrupt.json").write_text('{"not": "a work record"}')
+
+    client.post(
+        "/api/work",
+        json={"id": "2026-01-01T00-00-01", "project": "demo", "sl1": "api", "title": "b"},
+        headers=auth_headers,
+    )
+
+    response = client.get("/api/index", headers=auth_headers)
+
+    assert response.status_code == 200
+    body = response.json()
+    assert body["total"] == 1
+    assert body["works"][0]["id"] == "2026-01-01T00-00-01"
