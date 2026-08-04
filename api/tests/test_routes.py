@@ -130,6 +130,27 @@ def test_delete_sl1_returns_404_when_no_match(client, auth_headers):
     assert response.status_code == 404
 
 
+def test_post_work_rejects_oversized_title(client, auth_headers):
+    payload = {"project": "demo", "sl1": "api", "title": "x" * 201}
+
+    response = client.post("/api/work", json=payload, headers=auth_headers)
+
+    assert response.status_code == 422
+
+
+def test_post_work_rejects_too_many_steps(client, auth_headers):
+    payload = {
+        "project": "demo",
+        "sl1": "api",
+        "title": "many steps",
+        "steps": [{"label": "s", "status": "pending", "at": None} for _ in range(501)],
+    }
+
+    response = client.post("/api/work", json=payload, headers=auth_headers)
+
+    assert response.status_code == 422
+
+
 def test_security_headers_are_set_on_every_response(client):
     response = client.get("/healthz")
     assert response.headers["Content-Security-Policy"].startswith("default-src 'none'")
