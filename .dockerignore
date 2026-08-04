@@ -1,7 +1,11 @@
+.git/
+.github/
+docs/
+*.md
 __pycache__/
 *.pyc
 .venv/
-tests/
+api/tests/
 .pytest_cache/
 .mypy_cache/
 .ruff_cache/
