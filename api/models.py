@@ -1,6 +1,11 @@
 from typing import Literal
 
-from pydantic import BaseModel
+from pydantic import BaseModel, Field
+
+# Work ids are either the server-generated timestamp format or a caller-supplied
+# value; both are always used to build a filename (see storage._work_path), so
+# the charset is restricted to prevent path traversal (CWE-22).
+WORK_ID_PATTERN = r"^[A-Za-z0-9_-]+$"
 
 
 class Step(BaseModel):
@@ -10,7 +15,7 @@ class Step(BaseModel):
 
 
 class WorkIn(BaseModel):
-    id: str | None = None
+    id: str | None = Field(default=None, pattern=WORK_ID_PATTERN)
     project: str
     sl1: str
     title: str
