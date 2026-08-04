@@ -13,6 +13,7 @@
 ![Docker](https://img.shields.io/badge/Docker-ready-2496ED?logo=docker&logoColor=white)
 [![CI](https://github.com/MarvinLeRouge/CC-Beacon/actions/workflows/ci.yml/badge.svg)](https://github.com/MarvinLeRouge/CC-Beacon/actions/workflows/ci.yml)
 [![Deploy](https://github.com/MarvinLeRouge/CC-Beacon/actions/workflows/build-push.yml/badge.svg)](https://github.com/MarvinLeRouge/CC-Beacon/actions/workflows/build-push.yml)
+[![codecov](https://codecov.io/gh/MarvinLeRouge/CC-Beacon/graph/badge.svg)](https://codecov.io/gh/MarvinLeRouge/CC-Beacon)
 ![Licence](https://img.shields.io/github/license/MarvinLeRouge/CC-Beacon?cacheSeconds=3600)
 
 ---
@@ -56,6 +57,32 @@ projet
 
 ---
 
+## 🧱 Technologies utilisées
+
+### Backend
+- **FastAPI** — framework web Python, sert à la fois l'API et l'interface mobile statique
+- **Pydantic** — validation des requêtes/réponses
+- **uvicorn** — serveur ASGI
+
+### Frontend
+- **JavaScript vanilla** (ES2022) — pas de framework, pas d'étape de build
+- **CSS vanilla** — custom properties pour le theming (dark/light), pas de framework
+
+### DevOps & Déploiement
+- **Docker** — image de production unique
+- **GitHub Container Registry (GHCR)** — hébergement de l'image
+- **Traefik** — reverse proxy, TLS automatique
+- **GitHub Actions** — CI/CD
+
+### Tests & Qualité
+- **Pytest** + **pytest-cov** — suite de tests et couverture
+- **Codecov** — suivi et reporting de la couverture
+- **Ruff** — lint et formatage
+- **Mypy** — vérification statique de types
+- **pip-audit** — scan de vulnérabilités des dépendances
+- **pre-commit** — garde-fou qualité local
+
+---
 
 ## Fonctionnement
 
@@ -64,6 +91,24 @@ projet
 3. **FastAPI + Traefik** — un seul container sert l'interface mobile (`GET /`, `GET /app.js`) et l'API REST (`/api/*`, protégée par `Authorization: Bearer`), derrière un reverse proxy Traefik avec TLS automatique
 4. **Interface mobile** — `web/index.html` + `web/app.js` appellent l'API et affichent les vues projet/sl1/work avec pagination, suppression et rafraîchissement automatique quand un work est `in_progress`
 5. **Deploy CI/CD** — un push sur `main` déclenche `.github/workflows/ci.yml` (ruff, mypy, pytest) ; en cas de succès, `.github/workflows/build-push.yml` construit l'image de l'API, la pousse sur GHCR et la déploie sur le VPS via SSH
+
+---
+
+## 📡 Routes API
+
+Toutes les routes `/api/*` exigent `Authorization: Bearer <token>` ; voir [Sécurité](#sécurité) plus bas.
+
+| Méthode | Route | Auth | Description |
+|---------|-------|:----:|-------------|
+| `GET` | `/` | — | Interface mobile (`index.html`) |
+| `GET` | `/app.js` | — | Logique applicative |
+| `GET` | `/theme-init.js` | — | Script de préférence de thème, sans flash |
+| `GET` | `/healthz` | — | Health check |
+| `GET` | `/api/index` | ✅ | Index de tous les works |
+| `GET` | `/api/work/{work_id}` | ✅ | Détail complet d'un work |
+| `POST` | `/api/work` | ✅ | Créer ou mettre à jour un work |
+| `DELETE` | `/api/project/{name}` | ✅ | Supprimer tous les works d'un projet |
+| `DELETE` | `/api/sl1/{project}/{name}` | ✅ | Supprimer tous les works d'un sl1 |
 
 ---
 
@@ -167,6 +212,24 @@ projet
 ├── config.json               ← valeurs réelles : base_url, token
 └── works/
     └── index.json             ← cache local de l'index de l'API (pas une source de vérité)
+```
+
+---
+
+## 🧪 Lancer les tests
+
+```bash
+pip install -r api/requirements.txt -r api/requirements-dev.txt
+
+# Tests de l'API (27 tests)
+pytest api/tests --cov=api --cov-config=api/pyproject.toml --cov-report=term-missing -v
+```
+
+Garde-fou qualité (aussi lancé automatiquement par `.github/workflows/ci.yml` et le hook pre-commit local) :
+```bash
+ruff check api/
+ruff format --check api/
+cd api && mypy .
 ```
 
 ---
