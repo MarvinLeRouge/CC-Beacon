@@ -1,14 +1,16 @@
 import json
 import os
+import re
 from datetime import UTC, datetime
 from pathlib import Path
 from typing import Any
 
 from .logging_config import logger
-from .models import WorkIn
+from .models import WORK_ID_PATTERN, WorkIn
 
 PER_PAGE = 10
 REQUIRED_FIELDS = ("id", "project", "sl1", "title", "status", "started_at", "updated_at")
+_WORK_ID_RE = re.compile(WORK_ID_PATTERN)
 
 
 def _data_dir() -> Path:
@@ -19,6 +21,12 @@ def _data_dir() -> Path:
 
 
 def _work_path(work_id: str) -> Path:
+    # Defense in depth: callers should already validate this (Pydantic on the
+    # request body, FastAPI's Path() on the route param), but this is the
+    # single choke point that turns an id into a filesystem path, so it's
+    # verified again here regardless of caller.
+    if not _WORK_ID_RE.fullmatch(work_id):
+        raise ValueError(f"invalid work id: {work_id!r}")
     return _data_dir() / f"{work_id}.json"
 
 
