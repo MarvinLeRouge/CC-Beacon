@@ -20,6 +20,9 @@ config.json
 
 # AI working notes (not part of the versioned project)
 docs/ai/
+PRODUCT.md
+DESIGN.md
+.impeccable/
 
 # Claude Code session metadata
 CLAUDE.md

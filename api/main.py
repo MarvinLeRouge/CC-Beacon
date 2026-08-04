@@ -52,3 +52,8 @@ def index_page() -> FileResponse:
 @app.get("/app.js")
 def app_js() -> FileResponse:
     return FileResponse(WEB_DIR / "app.js", media_type="application/javascript")
+
+
+@app.get("/theme-init.js")
+def theme_init_js() -> FileResponse:
+    return FileResponse(WEB_DIR / "theme-init.js", media_type="application/javascript")
