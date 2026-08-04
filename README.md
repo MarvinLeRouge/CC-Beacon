@@ -13,6 +13,7 @@
 ![Docker](https://img.shields.io/badge/Docker-ready-2496ED?logo=docker&logoColor=white)
 [![CI](https://github.com/MarvinLeRouge/CC-Beacon/actions/workflows/ci.yml/badge.svg)](https://github.com/MarvinLeRouge/CC-Beacon/actions/workflows/ci.yml)
 [![Deploy](https://github.com/MarvinLeRouge/CC-Beacon/actions/workflows/build-push.yml/badge.svg)](https://github.com/MarvinLeRouge/CC-Beacon/actions/workflows/build-push.yml)
+[![codecov](https://codecov.io/gh/MarvinLeRouge/CC-Beacon/graph/badge.svg)](https://codecov.io/gh/MarvinLeRouge/CC-Beacon)
 ![License](https://img.shields.io/github/license/MarvinLeRouge/CC-Beacon?cacheSeconds=3600)
 
 ---
@@ -56,6 +57,33 @@ project
 
 ---
 
+## 🧱 Technologies Used
+
+### Backend
+- **FastAPI** — Python web framework, serves both the API and the static mobile interface
+- **Pydantic** — request/response validation
+- **uvicorn** — ASGI server
+
+### Frontend
+- **Vanilla JavaScript** (ES2022) — no framework, no build step
+- **Vanilla CSS** — custom properties for theming (dark/light), no framework
+
+### DevOps & Deployment
+- **Docker** — single production image
+- **GitHub Container Registry (GHCR)** — image hosting
+- **Traefik** — reverse proxy, automatic TLS
+- **GitHub Actions** — CI/CD
+
+### Testing & Quality
+- **Pytest** + **pytest-cov** — test suite and coverage
+- **Codecov** — coverage tracking and reporting
+- **Ruff** — linting and formatting
+- **Mypy** — static type checking
+- **pip-audit** — dependency vulnerability scanning
+- **pre-commit** — local quality gate
+
+---
+
 ## How it works
 
 1. **Claude Code hook** — a `Stop` hook in `~/.claude/settings.json` calls `scripts/update_work.sh --sync-only` at the end of each session
@@ -63,6 +91,24 @@ project
 3. **FastAPI + Traefik** — a single container serves the mobile interface (`GET /`, `GET /app.js`) and the REST API (`/api/*`, protected by `Authorization: Bearer`), behind a Traefik reverse proxy with automatic TLS
 4. **Mobile interface** — `web/index.html` + `web/app.js` call the API and render project/sl1/work views with pagination, deletion, and auto-refresh when a work is `in_progress`
 5. **CI/CD deploy** — pushing to `main` triggers `.github/workflows/ci.yml` (ruff, mypy, pytest); on success, `.github/workflows/build-push.yml` builds the API image, pushes it to GHCR, and deploys it to the VPS over SSH
+
+---
+
+## 📡 API Routes
+
+All `/api/*` routes require `Authorization: Bearer <token>`; see [Security](#security) below.
+
+| Method | Route | Auth | Description |
+|--------|-------|:----:|-------------|
+| `GET` | `/` | — | Mobile interface (`index.html`) |
+| `GET` | `/app.js` | — | Application logic |
+| `GET` | `/theme-init.js` | — | Flash-free theme preference script |
+| `GET` | `/healthz` | — | Health check |
+| `GET` | `/api/index` | ✅ | Index of all works |
+| `GET` | `/api/work/{work_id}` | ✅ | Full detail of one work |
+| `POST` | `/api/work` | ✅ | Create or update a work |
+| `DELETE` | `/api/project/{name}` | ✅ | Delete all works of a project |
+| `DELETE` | `/api/sl1/{project}/{name}` | ✅ | Delete all works of a sl1 |
 
 ---
 
@@ -166,6 +212,24 @@ project
 ├── config.json               ← real values: base_url, token
 └── works/
     └── index.json             ← local cache of the API's index (not a source of truth)
+```
+
+---
+
+## 🧪 Running tests
+
+```bash
+pip install -r api/requirements.txt -r api/requirements-dev.txt
+
+# API tests (27 tests)
+pytest api/tests --cov=api --cov-config=api/pyproject.toml --cov-report=term-missing -v
+```
+
+Quality gate (also run automatically by `.github/workflows/ci.yml` and the local pre-commit hook):
+```bash
+ruff check api/
+ruff format --check api/
+cd api && mypy .
 ```
 
 ---
