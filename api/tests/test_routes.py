@@ -130,6 +130,16 @@ def test_delete_sl1_returns_404_when_no_match(client, auth_headers):
     assert response.status_code == 404
 
 
+def test_security_headers_are_set_on_every_response(client):
+    response = client.get("/healthz")
+    assert response.headers["Content-Security-Policy"].startswith("default-src 'none'")
+    assert response.headers["X-Content-Type-Options"] == "nosniff"
+    assert response.headers["X-Frame-Options"] == "DENY"
+    assert response.headers["Referrer-Policy"] == "no-referrer"
+    assert response.headers["Strict-Transport-Security"] == "max-age=63072000; includeSubDomains"
+    assert response.headers["Permissions-Policy"] == "geolocation=(), camera=(), microphone=()"
+
+
 def test_auto_generated_api_docs_are_disabled(client):
     for path in ("/docs", "/redoc", "/openapi.json"):
         assert client.get(path).status_code == 404
