@@ -3,6 +3,7 @@
 // ---------------------------------------------------------------------------
 const API = '/api';
 const TOKEN_KEY = 'cc-beacon-token';
+const THEME_KEY = 'cc-beacon-theme';
 
 const PER_PAGE   = 10;
 const REFRESH_MS = 30_000;
@@ -127,24 +128,25 @@ function projectProgress(projectWorks) {
 // ---------------------------------------------------------------------------
 function pct(n) { return Math.round(n * 100); }
 
-function progressBar(ratio, isDone = false) {
-  const p = Math.min(1, Math.max(0, ratio));
+function progressBar(ratio, statusClass = '') {
+  const p   = Math.min(1, Math.max(0, ratio));
+  const cls = statusClass ? ` ${statusClass}` : '';
   return `
     <div class="progress-wrap">
       <div class="progress-label">
-        <span></span><span>${pct(p)} %</span>
+        <span>${pct(p)} %</span>
       </div>
       <div class="progress-bar">
-        <div class="progress-fill${isDone ? ' done' : ''}" style="width:${pct(p)}%"></div>
+        <div class="progress-fill${cls}" style="transform:scaleX(${p})"></div>
       </div>
     </div>`;
 }
 
 const STATUS_LABELS = {
-  pending:     'Pending',
-  in_progress: 'In progress',
-  done:        'Done',
-  error:       'Error',
+  pending:     'En attente',
+  in_progress: 'En cours',
+  done:        'Terminé',
+  error:       'Erreur',
 };
 
 function badge(status) {
@@ -152,6 +154,12 @@ function badge(status) {
   const cls   = STATUS_LABELS[status] ? `badge badge-${status}` : 'badge badge-pending';
   return `<span class="${cls}">${label}</span>`;
 }
+
+const STEP_STATUS_LABELS = {
+  pending:     'À faire',
+  in_progress: 'En cours',
+  done:        'Terminé',
+};
 
 function stepIcon(status) {
   return status === 'done' ? '✓' : status === 'in_progress' ? '⟳' : '○';
@@ -195,6 +203,35 @@ function flashError(message) {
   setTimeout(() => el.remove(), 4000);
 }
 
+function showConfirmSheet(message, confirmLabel = 'Supprimer') {
+  return new Promise(resolve => {
+    const backdrop = document.createElement('div');
+    backdrop.className = 'confirm-backdrop';
+    backdrop.innerHTML = `
+      <div class="confirm-sheet" role="alertdialog" aria-modal="true" aria-label="Confirmation">
+        <p class="confirm-message">${esc(message)}</p>
+        <div class="confirm-actions">
+          <button type="button" class="confirm-cancel">Annuler</button>
+          <button type="button" class="confirm-delete">${esc(confirmLabel)}</button>
+        </div>
+      </div>`;
+    document.body.appendChild(backdrop);
+
+    const finish = result => {
+      document.removeEventListener('keydown', onKeydown);
+      backdrop.remove();
+      resolve(result);
+    };
+    const onKeydown = e => { if (e.key === 'Escape') finish(false); };
+
+    backdrop.addEventListener('click', e => { if (e.target === backdrop) finish(false); });
+    backdrop.querySelector('.confirm-cancel').addEventListener('click', () => finish(false));
+    backdrop.querySelector('.confirm-delete').addEventListener('click', () => finish(true));
+    document.addEventListener('keydown', onKeydown);
+    backdrop.querySelector('.confirm-cancel').focus();
+  });
+}
+
 // ---------------------------------------------------------------------------
 // Navigation
 // ---------------------------------------------------------------------------
@@ -231,14 +268,14 @@ function drawProjects() {
     const done  = prog === 1;
 
     return `
-      <div class="card" data-action="project" data-project="${esc(project)}">
+      <div class="card" data-action="project" data-project="${esc(project)}" role="button" tabindex="0">
         <div class="card-header">
           <span class="card-title">${esc(project)}</span>
           ${done ? badge('done') : ''}
           <button class="card-delete" data-action="delete-project" data-project="${esc(project)}" aria-label="Supprimer ${esc(project)}">✕</button>
         </div>
         <div class="card-meta">${sl1s} sl1 · ${pw.length} work${pw.length > 1 ? 's' : ''}</div>
-        ${progressBar(prog, done)}
+        ${progressBar(prog, done ? 'done' : '')}
       </div>`;
   }).join('');
 
@@ -258,14 +295,14 @@ function drawSl1(project) {
     const done2 = sw.filter(w => w.status === 'done').length;
 
     return `
-      <div class="card" data-action="sl1" data-project="${esc(project)}" data-sl1="${esc(sl1)}">
+      <div class="card" data-action="sl1" data-project="${esc(project)}" data-sl1="${esc(sl1)}" role="button" tabindex="0">
         <div class="card-header">
           <span class="card-title">${esc(sl1)}</span>
           ${done ? badge('done') : ''}
           <button class="card-delete" data-action="delete-sl1" data-project="${esc(project)}" data-sl1="${esc(sl1)}" data-last-sl1="${sl1s.length === 1}" aria-label="Supprimer ${esc(sl1)}">✕</button>
         </div>
         <div class="card-meta">${sw.length} work${sw.length > 1 ? 's' : ''} · ${done2} terminé${done2 > 1 ? 's' : ''}</div>
-        ${progressBar(prog, done)}
+        ${progressBar(prog, done ? 'done' : '')}
       </div>`;
   }).join('');
 
@@ -289,7 +326,8 @@ function drawWorks(project, sl1, page) {
       <div class="steps-list">
         ${w._steps.map(s => `
           <div class="step-item">
-            <span class="step-icon" data-status="${s.status}">${stepIcon(s.status)}</span>
+            <span class="step-icon" data-status="${s.status}" aria-hidden="true">${stepIcon(s.status)}</span>
+            <span class="sr-only">${STEP_STATUS_LABELS[s.status] ?? s.status}</span>
             <div>
               <div class="step-label">${esc(s.label)}</div>
               ${s.at ? `<div class="step-at">${fmtDate(s.at)}</div>` : ''}
@@ -298,6 +336,7 @@ function drawWorks(project, sl1, page) {
       </div>` : '';
 
     const toggleLabel = expanded ? '▲ Masquer les steps' : `▼ ${w.step_count} step${w.step_count !== 1 ? 's' : ''}`;
+    const progressStatus = w.status === 'done' ? 'done' : w.status === 'error' ? 'error' : '';
 
     return `
       <div class="card" style="cursor:default">
@@ -306,7 +345,7 @@ function drawWorks(project, sl1, page) {
           ${badge(w.status)}
         </div>
         <div class="card-meta">${cardMeta(w)}</div>
-        ${progressBar(prog, w.status === 'done')}
+        ${progressBar(prog, progressStatus)}
         ${w.step_count ? `
           <button class="steps-toggle" data-action="toggle" data-id="${esc(w.id)}">${toggleLabel}</button>
           ${stepsHTML}` : ''}
@@ -339,11 +378,23 @@ function draw() {
 // ---------------------------------------------------------------------------
 // Auto-refresh
 // ---------------------------------------------------------------------------
+function visibleWorks() {
+  const v = current();
+  if (v.name === 'sl1')   return allWorks.filter(w => w.project === v.project);
+  if (v.name === 'works') return allWorks.filter(w => w.project === v.project && w.sl1 === v.sl1);
+  return allWorks;
+}
+
 function scheduleRefresh() {
   clearTimeout(refreshTimer);
-  const live = allWorks.some(w => w.status === 'in_progress');
-  document.getElementById('refresh-indicator').hidden = !live;
-  if (live) {
+  // Polling itself is driven by the whole dataset — a work elsewhere might
+  // still be in_progress even if nothing in the current view is. The
+  // indicator, on the other hand, must only claim "live" for what's
+  // actually visible right now.
+  const anyLive  = allWorks.some(w => w.status === 'in_progress');
+  const viewLive = visibleWorks().some(w => w.status === 'in_progress');
+  document.getElementById('refresh-indicator').hidden = !viewLive;
+  if (anyLive) {
     refreshTimer = setTimeout(reload, REFRESH_MS);
   }
 }
@@ -359,6 +410,14 @@ async function reload() {
 // Event delegation
 // ---------------------------------------------------------------------------
 document.getElementById('btn-back').addEventListener('click', pop);
+
+document.getElementById('app').addEventListener('keydown', e => {
+  if (e.key !== 'Enter' && e.key !== ' ') return;
+  const el = e.target.closest('[data-action="project"], [data-action="sl1"]');
+  if (!el) return;
+  e.preventDefault();
+  el.click();
+});
 
 document.getElementById('app').addEventListener('click', async e => {
   const el = e.target.closest('[data-action]');
@@ -389,7 +448,8 @@ document.getElementById('app').addEventListener('click', async e => {
     }
   } else if (action === 'delete-project') {
     const project = el.dataset.project;
-    if (!confirm(`Supprimer le projet "${project}" et tous ses works ? Cette action est irréversible.`)) return;
+    const message = `Supprimer le projet "${project}" et tous ses works ? Cette action est irréversible.`;
+    if (!(await showConfirmSheet(message))) return;
     try {
       const index = await deleteProject(project);
       allWorks = index.works || [];
@@ -404,7 +464,7 @@ document.getElementById('app').addEventListener('click', async e => {
     const message = isLastSl1
       ? `"${sl1}" est le seul sl1 de "${project}". Le supprimer supprimera aussi le projet. Continuer ?`
       : `Supprimer le sl1 "${sl1}" et tous ses works ? Cette action est irréversible.`;
-    if (!confirm(message)) return;
+    if (!(await showConfirmSheet(message))) return;
     try {
       const index = await deleteSl1(project, sl1);
       allWorks = index.works || [];
@@ -453,6 +513,34 @@ document.addEventListener('visibilitychange', () => {
     reload();
   }
 });
+
+// ---------------------------------------------------------------------------
+// Theme toggle
+// ---------------------------------------------------------------------------
+// theme-init.js already applied any stored preference (before first paint,
+// to avoid a flash) — this just keeps the button in sync and handles clicks.
+function effectiveTheme() {
+  const stored = localStorage.getItem(THEME_KEY);
+  if (stored) return stored;
+  return window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
+}
+
+function updateThemeButton() {
+  const btn  = document.getElementById('btn-theme');
+  const dark = effectiveTheme() === 'dark';
+  btn.textContent = dark ? '☀' : '☾';
+  btn.setAttribute('aria-label', dark ? 'Passer en thème clair' : 'Passer en thème sombre');
+}
+
+function toggleTheme() {
+  const next = effectiveTheme() === 'dark' ? 'light' : 'dark';
+  localStorage.setItem(THEME_KEY, next);
+  document.documentElement.setAttribute('data-theme', next);
+  updateThemeButton();
+}
+
+document.getElementById('btn-theme').addEventListener('click', toggleTheme);
+updateThemeButton();
 
 // ---------------------------------------------------------------------------
 // Init
