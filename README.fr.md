@@ -219,6 +219,18 @@ cd ~/your-traefik-basedir/cc-beacon/compose && docker compose pull && docker com
 
 ---
 
+## Sécurité
+
+- **Authentification** — chaque route `/api/*` exige `Authorization: Bearer <token>`, vérifié par comparaison à temps constant ; les tentatives échouées sont limitées par IP (20/min)
+- **Validation des entrées** — les id de work sont restreints à `[A-Za-z0-9_-]+` (empêche la traversée de chemin dans le dossier de stockage) ; les champs texte sont bornés en taille
+- **Headers** — CSP (`script-src 'self'`, aucun script inline ou externe), HSTS, X-Content-Type-Options, X-Frame-Options, Referrer-Policy, Permissions-Policy
+- **Pas de docs API publiques** — `/docs`, `/redoc`, `/openapi.json` sont désactivées ; aucune raison d'exposer le schéma de l'API à des visiteurs non authentifiés
+- **Aucun secret côté client** — le token vit dans `localStorage`, saisi une fois par appareil, jamais transporté dans une URL, une query string, ou un header `Referer`
+- **Erreurs** — les exceptions non gérées sont loguées côté serveur avec le contexte de la requête et renvoient un message générique ; aucun détail interne ne fuit vers le client
+- **Chaîne d'approvisionnement** — dépendances figées en versions exactes, scannées avec `pip-audit` en CI à chaque push/PR
+
+---
+
 ## Intégration Claude Code
 
 Ajouter le hook suivant dans `~/.claude/settings.json` pour que le script se synchronise automatiquement en fin de session :
@@ -241,13 +253,13 @@ Ajouter le hook suivant dans `~/.claude/settings.json` pour que le script se syn
 }
 ```
 
-Le flag `--sync-only` ignore la création de fichier et lance uniquement le rsync — c'est un filet de sécurité. Pendant la session, appeler le script explicitement avec les arguments complets pour créer et mettre à jour le work.
+Le flag `--sync-only` ignore la création de work et se contente de rafraîchir le cache local `index.json` depuis `GET /api/index` — c'est un filet de sécurité. Pendant la session, appeler le script explicitement avec les arguments complets pour créer et mettre à jour un work.
 
 ---
 
 ## Interface
 
-`web/index.html` + `web/app.js` forment une application mobile-first (HTML/CSS/JS vanilla, sans étape de build), servie directement par l'API. Le mode sombre est supporté via `prefers-color-scheme: dark`. L'accès est protégé par un token saisi une fois par appareil — mis en cache dans `localStorage`, jamais transporté dans une URL — et envoyé en `Authorization: Bearer` à chaque appel API.
+`web/index.html` + `web/app.js` forment une application mobile-first (HTML/CSS/JS vanilla, sans étape de build), servie directement par l'API. Le mode sombre suit la préférence système par défaut, avec un bouton de bascule manuel dans le header (mémorisé par appareil). L'accès est protégé par un token saisi une fois par appareil — mis en cache dans `localStorage`, jamais transporté dans une URL — et envoyé en `Authorization: Bearer` à chaque appel API.
 
 | Vue | Description |
 |-----|-------------|
@@ -258,12 +270,15 @@ Le flag `--sync-only` ignore la création de fichier et lance uniquement le rsyn
 - Works terminés : `Terminé le JJ/MM HH:mm · X min`
 - Works en cours avec steps avancés : `Fin estimée dans X min`
 - Works en cours sans steps done : `En cours depuis X min`
-- Quand un work a le statut `in_progress`, la page se rafraîchit automatiquement toutes les 30 secondes
-- Les projets et sl1 peuvent être supprimés depuis leur vue liste (confirmation requise, action irréversible)
+- Quand un work a le statut `in_progress`, la page se rafraîchit automatiquement toutes les 30 secondes — l'indicateur "live" est scopé à la vue actuellement affichée
+- Les projets et sl1 peuvent être supprimés depuis leur vue liste, via une feuille de confirmation intégrée (pas une boîte de dialogue native du navigateur ; action irréversible)
+- Les cartes sont navigables au clavier (`Tab` + `Entrée`/`Espace`), et les icônes de statut des steps portent un label pour lecteur d'écran
 
 ---
 
 ## Feuille de route
+
+### v1.0.0 — nginx + rsync
 
 - [x] **Phase 1** — Structure du repo et contenu des fichiers
 - [x] **Phase 2** — Configuration VPS : nginx, labels Traefik, arborescence
@@ -273,6 +288,16 @@ Le flag `--sync-only` ignore la création de fichier et lance uniquement le rsyn
 - [x] **Phase 6** — Harmonisation Traefik, correction du deploy prod, CI/CD automatise via GitHub Actions
 - [x] **Phase 7** — Ameliorations interface mobile : mode sombre, contraste WCAG AA, tap targets accessibles, echelle typographique unifiee
 - [x] **Phase 8** — Securite : JS extrait dans `app.js` pour un CSP strict, correction XSS dans `badge()`, token retire des messages d'erreur, headers de securite (CSP, X-Content-Type-Options, X-Frame-Options, Referrer-Policy)
+
+### v2.0.0 — FastAPI + GHCR
+
+- [x] **Phase 1** — Container FastAPI en remplacement de nginx : package `api/` (auth, routes, storage, models), suite pytest, Dockerfile, outillage qualité ruff/mypy/pre-commit
+- [x] **Phase 2** — `update_work.sh` migré de rsync/SSH vers un client HTTP de la nouvelle API
+- [x] **Phase 3** — `web/app.js` : authentification Bearer (jamais transportée dans une URL), UI de suppression pour projets et sl1
+- [x] **Phase 4** — Bascule CI/CD : nginx supprimé, build/push de l'image sur GHCR, `ci.yml` + `build-push.yml` remplaçant `deploy.yml`
+- [x] **Phase 5** — Durcissement sécurité : correction d'une traversée de chemin dans les id de work (CWE-22), désactivation des docs API auto-générées, headers HSTS/Permissions-Policy, `pip-audit` en CI, bornage de la taille des champs, logging serveur structuré avec gestionnaire d'exception global
+- [x] **Phase 6** — Consolidation design : échelle typographique unifiée, palette dark dédupliquée, couleur d'état erreur, indicateur "live" scopé à la vue, feuille de confirmation intégrée remplaçant `confirm()` natif, accessibilité clavier/lecteur d'écran, switch dark/light manuel
+- [x] **Phase 7** — Documentation et préparation de la release `v2.0.0`
 
 ---
 
