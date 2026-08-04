@@ -1,3 +1,35 @@
+def test_post_work_rejects_path_traversal_in_id(client, auth_headers, tmp_path):
+    payload = {
+        "id": "../../../tmp/evil",
+        "project": "demo",
+        "sl1": "api",
+        "title": "malicious",
+    }
+
+    response = client.post("/api/work", json=payload, headers=auth_headers)
+
+    assert response.status_code == 422
+    # Nothing was written anywhere, not even inside the legitimate data dir.
+    assert list((tmp_path / "works").glob("*.json")) == []
+
+
+def test_post_work_rejects_absolute_path_id(client, auth_headers, tmp_path):
+    payload = {"id": "/tmp/evil", "project": "demo", "sl1": "api", "title": "malicious"}
+
+    response = client.post("/api/work", json=payload, headers=auth_headers)
+
+    assert response.status_code == 422
+    assert list((tmp_path / "works").glob("*.json")) == []
+
+
+def test_get_work_rejects_invalid_id_format(client, auth_headers):
+    # A bare ".." gets normalized away by the HTTP client before it even
+    # reaches routing (standard URL semantics) — use a value that reaches
+    # the route as a literal segment but still fails the allowlist.
+    response = client.get("/api/work/..foo", headers=auth_headers)
+    assert response.status_code == 422
+
+
 def test_post_work_creates_entry_with_generated_id(client, auth_headers):
     payload = {"project": "demo", "sl1": "api", "title": "First work", "status": "pending"}
 

@@ -1,10 +1,11 @@
-from typing import Any
+from typing import Annotated, Any
 
 from fastapi import APIRouter, Depends, HTTPException
+from fastapi import Path as PathParam
 
 from . import storage
 from .auth import require_token
-from .models import WorkIn
+from .models import WORK_ID_PATTERN, WorkIn
 
 router = APIRouter(prefix="/api", dependencies=[Depends(require_token)])
 
@@ -15,7 +16,7 @@ def get_index() -> dict[str, Any]:
 
 
 @router.get("/work/{work_id}")
-def get_work(work_id: str) -> dict[str, Any]:
+def get_work(work_id: Annotated[str, PathParam(pattern=WORK_ID_PATTERN)]) -> dict[str, Any]:
     work = storage.load_work(work_id)
     if work is None:
         raise HTTPException(status_code=404, detail="Work not found")

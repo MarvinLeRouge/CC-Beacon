@@ -8,6 +8,11 @@ NAME_MAX_LENGTH = 200
 SUMMARY_MAX_LENGTH = 5000
 MAX_STEPS = 500
 
+# Work ids are either the server-generated timestamp format or a caller-supplied
+# value; both are always used to build a filename (see storage._work_path), so
+# the charset is restricted to prevent path traversal (CWE-22).
+WORK_ID_PATTERN = r"^[A-Za-z0-9_-]+$"
+
 
 class Step(BaseModel):
     label: str = Field(max_length=NAME_MAX_LENGTH)
@@ -16,7 +21,7 @@ class Step(BaseModel):
 
 
 class WorkIn(BaseModel):
-    id: str | None = None
+    id: str | None = Field(default=None, pattern=WORK_ID_PATTERN)
     project: str = Field(max_length=NAME_MAX_LENGTH)
     sl1: str = Field(max_length=NAME_MAX_LENGTH)
     title: str = Field(max_length=NAME_MAX_LENGTH)
