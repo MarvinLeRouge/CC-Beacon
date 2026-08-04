@@ -9,7 +9,7 @@ from .routes import router
 
 WEB_DIR = Path(__file__).resolve().parent.parent / "web"
 
-app = FastAPI(title="CC-Beacon API")
+app = FastAPI(title="CC-Beacon API", docs_url=None, redoc_url=None, openapi_url=None)
 app.include_router(router)
 
 

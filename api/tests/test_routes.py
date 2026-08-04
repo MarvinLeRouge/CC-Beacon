@@ -130,6 +130,11 @@ def test_delete_sl1_returns_404_when_no_match(client, auth_headers):
     assert response.status_code == 404
 
 
+def test_auto_generated_api_docs_are_disabled(client):
+    for path in ("/docs", "/redoc", "/openapi.json"):
+        assert client.get(path).status_code == 404
+
+
 def test_healthz_is_unauthenticated(client):
     response = client.get("/healthz")
     assert response.status_code == 200
