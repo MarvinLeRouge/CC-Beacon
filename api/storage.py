@@ -4,9 +4,11 @@ from datetime import UTC, datetime
 from pathlib import Path
 from typing import Any
 
+from .logging_config import logger
 from .models import WorkIn
 
 PER_PAGE = 10
+REQUIRED_FIELDS = ("id", "project", "sl1", "title", "status", "started_at", "updated_at")
 
 
 def _data_dir() -> Path:
@@ -28,8 +30,16 @@ def load_work(work_id: str) -> dict[str, Any] | None:
 
 
 def list_all_works() -> list[dict[str, Any]]:
-    files = sorted(_data_dir().glob("*.json"))
-    return [_read_json(f) for f in files]
+    files = sorted(f for f in _data_dir().glob("*.json") if f.name != "index.json")
+    works = []
+    for f in files:
+        record = _read_json(f)
+        missing = [field for field in REQUIRED_FIELDS if field not in record]
+        if missing:
+            logger.warning("Skipping %s: missing required field(s) %s", f.name, missing)
+            continue
+        works.append(record)
+    return works
 
 
 def build_index() -> dict[str, Any]:
