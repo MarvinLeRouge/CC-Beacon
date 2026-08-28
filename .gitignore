@@ -18,6 +18,12 @@ Thumbs.db
 # Safety net — never commit a real config with secrets
 config.json
 
+# Gitignore tooling
+# Headroom
+.serena
+# Graphify
+graphify-out
+
 # AI working notes (not part of the versioned project)
 docs/ai/
 PRODUCT.md
