@@ -341,26 +341,9 @@ Le flag `--sync-only` ignore la création de work et se contente de rafraîchir 
 
 ## Feuille de route
 
-### v1.0.0 — nginx + rsync
-
-- [x] **Phase 1** — Structure du repo et contenu des fichiers
-- [x] **Phase 2** — Configuration VPS : nginx, labels Traefik, arborescence
-- [x] **Phase 3** — Scripts et hooks : `config.example.json`, `update_work.sh`, hook `settings.json`
-- [x] **Phase 4** — Interface mobile : `web/index.html`
-- [x] **Phase 5** — Section CLAUDE.md décrivant CC-Beacon pour les sessions futures
-- [x] **Phase 6** — Harmonisation Traefik, correction du deploy prod, CI/CD automatise via GitHub Actions
-- [x] **Phase 7** — Ameliorations interface mobile : mode sombre, contraste WCAG AA, tap targets accessibles, echelle typographique unifiee
-- [x] **Phase 8** — Securite : JS extrait dans `app.js` pour un CSP strict, correction XSS dans `badge()`, token retire des messages d'erreur, headers de securite (CSP, X-Content-Type-Options, X-Frame-Options, Referrer-Policy)
-
-### v2.0.0 — FastAPI + GHCR
-
-- [x] **Phase 1** — Container FastAPI en remplacement de nginx : package `api/` (auth, routes, storage, models), suite pytest, Dockerfile, outillage qualité ruff/mypy/pre-commit
-- [x] **Phase 2** — `update_work.sh` migré de rsync/SSH vers un client HTTP de la nouvelle API
-- [x] **Phase 3** — `web/app.js` : authentification Bearer (jamais transportée dans une URL), UI de suppression pour projets et sl1
-- [x] **Phase 4** — Bascule CI/CD : nginx supprimé, build/push de l'image sur GHCR, `ci.yml` + `build-push.yml` remplaçant `deploy.yml`
-- [x] **Phase 5** — Durcissement sécurité : correction d'une traversée de chemin dans les id de work (CWE-22), désactivation des docs API auto-générées, headers HSTS/Permissions-Policy, `pip-audit` en CI, bornage de la taille des champs, logging serveur structuré avec gestionnaire d'exception global
-- [x] **Phase 6** — Consolidation design : échelle typographique unifiée, palette dark dédupliquée, couleur d'état erreur, indicateur "live" scopé à la vue, feuille de confirmation intégrée remplaçant `confirm()` natif, accessibilité clavier/lecteur d'écran, switch dark/light manuel
-- [x] **Phase 7** — Documentation et préparation de la release `v2.0.0`
+Les deux versions majeures sont terminées : v1.0.0 (nginx + rsync, 8 phases) et
+v2.0.0 (FastAPI + GHCR, 7 phases). Voir [`docs/roadmap.fr.md`](docs/roadmap.fr.md)
+pour le détail phase par phase.
 
 ---
 
