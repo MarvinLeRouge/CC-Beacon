@@ -10,6 +10,18 @@ To regenerate locally, run `npx git-cliff -o CHANGELOG.md`.
 ### 📚 Documentation
 
 - *(ci)* Add Codecov, sync README with GeoChallenge-Tracker's structure
+- *(changelog)* Add git-cliff configuration
+- *(changelog)* Generate CHANGELOG.md from commit history
+- *(roadmap)* Extract roadmap detail out of README
+- *(roadmap)* Add French roadmap detail
+- *(readme)* Link out to docs/roadmap.md instead of inlining it
+- *(readme)* Link out to docs/roadmap.fr.md instead of inlining it
+- *(security)* Add vulnerability disclosure policy
+- *(security)* Add French vulnerability disclosure policy
+
+### ⚙️ Miscellaneous Tasks
+
+- *(changelog)* Add automated changelog workflow
 ## [2.0.0] - 2026-08-04
 
 ### 🚀 Features
