@@ -25,7 +25,7 @@ config.json
 graphify-out
 
 # AI working notes (not part of the versioned project)
-docs/ai/
+docs/work-in-progress/
 PRODUCT.md
 DESIGN.md
 .impeccable/
