@@ -18,6 +18,14 @@ To regenerate locally, run `npx git-cliff -o CHANGELOG.md`.
 - *(readme)* Link out to docs/roadmap.fr.md instead of inlining it
 - *(security)* Add vulnerability disclosure policy
 - *(security)* Add French vulnerability disclosure policy
+- Add contributing guide
+- Add code of conduct
+- Add operations guide
+- Add API endpoints reference
+- Add architecture reference
+- Add product context reference
+- Add GitHub issue and PR templates
+- Trim README sections superseded by dedicated docs
 
 ### ⚙️ Miscellaneous Tasks
 
