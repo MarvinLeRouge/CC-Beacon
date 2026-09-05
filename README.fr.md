@@ -96,19 +96,7 @@ projet
 
 ## 📡 Routes API
 
-Toutes les routes `/api/*` exigent `Authorization: Bearer <token>` ; voir [Sécurité](#sécurité) plus bas.
-
-| Méthode | Route | Auth | Description |
-|---------|-------|:----:|-------------|
-| `GET` | `/` | — | Interface mobile (`index.html`) |
-| `GET` | `/app.js` | — | Logique applicative |
-| `GET` | `/theme-init.js` | — | Script de préférence de thème, sans flash |
-| `GET` | `/healthz` | — | Health check |
-| `GET` | `/api/index` | ✅ | Index de tous les works |
-| `GET` | `/api/work/{work_id}` | ✅ | Détail complet d'un work |
-| `POST` | `/api/work` | ✅ | Créer ou mettre à jour un work |
-| `DELETE` | `/api/project/{name}` | ✅ | Supprimer tous les works d'un projet |
-| `DELETE` | `/api/sl1/{project}/{name}` | ✅ | Supprimer tous les works d'un sl1 |
+Voir [`docs/api/api_endpoints.fr.md`](docs/api/api_endpoints.fr.md) pour la référence complète des routes.
 
 ---
 
@@ -127,92 +115,9 @@ Toutes les routes `/api/*` exigent `Authorization: Bearer <token>` ; voir [Sécu
 
 ---
 
-## Structure des données
+## Structure des données et du projet
 
-### Fichier work (un par session)
-
-```json
-{
-  "id": "2026-06-03T10-00-00",
-  "project": "nom-du-projet",
-  "sl1": "nom-du-sl1",
-  "title": "…",
-  "status": "pending | in_progress | done | error",
-  "started_at": "2026-06-03T10:00:00Z",
-  "updated_at": "2026-06-03T10:42:00Z",
-  "completion_time": "2026-06-03T10:42:00Z",
-  "steps": [
-    { "label": "…", "status": "pending | in_progress | done", "at": "…" }
-  ],
-  "summary": "texte libre"
-}
-```
-
-`completion_time` est fixé une seule fois lors du premier passage à `done` et n'est jamais écrasé.
-
-### Index (calculé à la demande par `GET /api/index` à partir des fichiers work — jamais persisté séparément)
-
-```json
-{
-  "works": [
-    {
-      "id": "…",
-      "project": "…",
-      "sl1": "…",
-      "title": "…",
-      "status": "…",
-      "started_at": "…",
-      "updated_at": "…",
-      "completion_time": "…",
-      "step_count": 4,
-      "steps_done": 3
-    }
-  ],
-  "page": 1,
-  "per_page": 10,
-  "total": 24
-}
-```
-
----
-
-## Structure du projet
-
-```
-~/projets/CC-Beacon/          ← ce repo
-├── .github/
-│   └── workflows/
-│       ├── ci.yml             ← lint, typage et tests de l'API à chaque push/PR
-│       └── build-push.yml     ← construit et pousse l'image de l'API sur GHCR, déploie via SSH
-├── api/
-│   ├── main.py                ← app FastAPI : sert index.html/app.js, headers de sécurité, /healthz
-│   ├── auth.py                ← dépendance Bearer
-│   ├── models.py               ← modèles Pydantic
-│   ├── routes.py                ← endpoints /api/*
-│   ├── storage.py                ← stockage JSON, index calculé à la volée
-│   ├── tests/                     ← suite pytest
-│   ├── Dockerfile
-│   └── requirements*.txt, pyproject.toml
-├── docs/
-│   └── ai/                   ← notes de travail IA (gitignored)
-├── ops/
-│   └── compose.env.example   ← template pour compose/.env sur le VPS
-├── scripts/
-│   └── update_work.sh        ← client HTTP pour l'API
-├── web/
-│   ├── index.html            ← interface mobile (HTML + CSS)
-│   └── app.js                ← logique applicative
-├── docker-compose.prod.yml   ← container api + labels Traefik (prod)
-├── config.example.json       ← template versionné (sans valeurs sensibles)
-├── .pre-commit-config.yaml
-├── .gitignore
-└── README.md
-
-~/.CC-Beacon/                 ← hors repo, jamais commité
-├── config.json               ← valeurs réelles : base_url, token
-└── works/
-    └── index.json             ← cache local de l'index de l'API (pas une source de vérité)
-```
+Voir [`docs/architecture/api_architecture.fr.md`](docs/architecture/api_architecture.fr.md) pour les schémas JSON work/index et l'organisation du dépôt.
 
 ---
 
@@ -252,33 +157,7 @@ cd api && mypy .
 
 ## Configuration du VPS
 
-```
-~/your-traefik-basedir/cc-beacon/
-├── compose/
-│   ├── docker-compose.yml          ← copie de docker-compose.prod.yml
-│   └── .env                        ← DOMAIN=votre-domaine.com (jamais commité)
-└── shared/
-    ├── env/
-    │   └── secrets.env             ← TOKEN=votre-token (jamais commité)
-    └── data/
-        └── works/                  ← stockage persistant de l'API (un fichier JSON par work)
-```
-
-**Deux fichiers d'environnement distincts, deux rôles distincts :**
-- `compose/.env` — lu par `docker compose` au démarrage pour l'interpolation des labels (`${DOMAIN}` dans les labels Traefik). Voir `ops/compose.env.example` pour le template.
-- `shared/env/secrets.env` — transmis au container `api` sous forme de `TOKEN`, lu directement par l'application FastAPI.
-
-Aucun des deux fichiers n'est jamais commité.
-
-Générer un token :
-```bash
-openssl rand -hex 24
-```
-
-Démarrer le container :
-```bash
-cd ~/your-traefik-basedir/cc-beacon/compose && docker compose pull && docker compose up -d
-```
+Voir [`docs/operations.fr.md`](docs/operations.fr.md) pour le pipeline de déploiement, l'organisation du serveur et la configuration.
 
 ---
 

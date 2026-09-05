@@ -96,19 +96,7 @@ project
 
 ## 📡 API Routes
 
-All `/api/*` routes require `Authorization: Bearer <token>`; see [Security](#security) below.
-
-| Method | Route | Auth | Description |
-|--------|-------|:----:|-------------|
-| `GET` | `/` | — | Mobile interface (`index.html`) |
-| `GET` | `/app.js` | — | Application logic |
-| `GET` | `/theme-init.js` | — | Flash-free theme preference script |
-| `GET` | `/healthz` | — | Health check |
-| `GET` | `/api/index` | ✅ | Index of all works |
-| `GET` | `/api/work/{work_id}` | ✅ | Full detail of one work |
-| `POST` | `/api/work` | ✅ | Create or update a work |
-| `DELETE` | `/api/project/{name}` | ✅ | Delete all works of a project |
-| `DELETE` | `/api/sl1/{project}/{name}` | ✅ | Delete all works of a sl1 |
+See [`docs/api/api_endpoints.md`](docs/api/api_endpoints.md) for the full route reference.
 
 ---
 
@@ -127,92 +115,9 @@ All `/api/*` routes require `Authorization: Bearer <token>`; see [Security](#sec
 
 ---
 
-## Data structure
+## Data structure & project structure
 
-### Work file (one per session)
-
-```json
-{
-  "id": "2026-06-03T10-00-00",
-  "project": "project-name",
-  "sl1": "sl1-name",
-  "title": "…",
-  "status": "pending | in_progress | done | error",
-  "started_at": "2026-06-03T10:00:00Z",
-  "updated_at": "2026-06-03T10:42:00Z",
-  "completion_time": "2026-06-03T10:42:00Z",
-  "steps": [
-    { "label": "…", "status": "pending | in_progress | done", "at": "…" }
-  ],
-  "summary": "free text"
-}
-```
-
-`completion_time` is set once when the work first transitions to `done` and never overwritten.
-
-### Index (computed on demand by `GET /api/index` from every work file — never persisted separately)
-
-```json
-{
-  "works": [
-    {
-      "id": "…",
-      "project": "…",
-      "sl1": "…",
-      "title": "…",
-      "status": "…",
-      "started_at": "…",
-      "updated_at": "…",
-      "completion_time": "…",
-      "step_count": 4,
-      "steps_done": 3
-    }
-  ],
-  "page": 1,
-  "per_page": 10,
-  "total": 24
-}
-```
-
----
-
-## Project structure
-
-```
-~/projets/CC-Beacon/          ← this repo
-├── .github/
-│   └── workflows/
-│       ├── ci.yml             ← lint, type-check and test the API on every push/PR
-│       └── build-push.yml     ← builds and pushes the API image to GHCR, deploys over SSH
-├── api/
-│   ├── main.py                ← FastAPI app: serves index.html/app.js, security headers, /healthz
-│   ├── auth.py                ← Bearer token dependency
-│   ├── models.py               ← Pydantic models
-│   ├── routes.py                ← /api/* endpoints
-│   ├── storage.py                ← JSON file storage, index computed on the fly
-│   ├── tests/                     ← pytest suite
-│   ├── Dockerfile
-│   └── requirements*.txt, pyproject.toml
-├── docs/
-│   └── ai/                   ← AI working notes (gitignored)
-├── ops/
-│   └── compose.env.example   ← template for compose/.env on the VPS
-├── scripts/
-│   └── update_work.sh        ← HTTP client for the API
-├── web/
-│   ├── index.html            ← mobile interface (HTML + CSS)
-│   └── app.js                ← application logic
-├── docker-compose.prod.yml   ← api container + Traefik labels (prod)
-├── config.example.json       ← versioned template (no sensitive values)
-├── .pre-commit-config.yaml
-├── .gitignore
-└── README.md
-
-~/.CC-Beacon/                 ← outside the repo, never committed
-├── config.json               ← real values: base_url, token
-└── works/
-    └── index.json             ← local cache of the API's index (not a source of truth)
-```
+See [`docs/architecture/api_architecture.md`](docs/architecture/api_architecture.md) for the work/index JSON schemas and the repository layout.
 
 ---
 
@@ -252,33 +157,7 @@ cd api && mypy .
 
 ## VPS setup
 
-```
-~/your-traefik-basedir/cc-beacon/
-├── compose/
-│   ├── docker-compose.yml          ← copy of docker-compose.prod.yml
-│   └── .env                        ← DOMAIN=your-domain.com (never committed)
-└── shared/
-    ├── env/
-    │   └── secrets.env             ← TOKEN=your-secret-token (never committed)
-    └── data/
-        └── works/                  ← the API's persistent storage (one JSON file per work)
-```
-
-**Two separate env files, two separate purposes:**
-- `compose/.env` — read by `docker compose` at startup for label interpolation (`${DOMAIN}` in Traefik labels). See `ops/compose.env.example` for the template.
-- `shared/env/secrets.env` — passed to the `api` container as `TOKEN`, read directly by the FastAPI app.
-
-Neither file is ever committed.
-
-Generate a token with:
-```bash
-openssl rand -hex 24
-```
-
-Start the container:
-```bash
-cd ~/your-traefik-basedir/cc-beacon/compose && docker compose pull && docker compose up -d
-```
+See [`docs/operations.md`](docs/operations.md) for the deployment pipeline, server layout, and configuration.
 
 ---
 
