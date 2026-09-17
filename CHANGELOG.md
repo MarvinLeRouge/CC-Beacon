@@ -26,6 +26,7 @@ To regenerate locally, run `npx git-cliff -o CHANGELOG.md`.
 - Add product context reference
 - Add GitHub issue and PR templates
 - Trim README sections superseded by dedicated docs
+- *(readme)* Document codecov coverage thresholds
 
 ### ⚙️ Miscellaneous Tasks
 
