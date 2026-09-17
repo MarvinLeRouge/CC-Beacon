@@ -137,6 +137,8 @@ ruff format --check api/
 cd api && mypy .
 ```
 
+Seuils de couverture (`codecov.yml`, bloquants) : projet 80% (±2%), patch 90% (±5%).
+
 ---
 
 ## Configuration

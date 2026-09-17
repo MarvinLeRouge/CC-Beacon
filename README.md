@@ -137,6 +137,8 @@ ruff format --check api/
 cd api && mypy .
 ```
 
+Coverage thresholds (`codecov.yml`, blocking): project 80% (±2%), patch 90% (±5%).
+
 ---
 
 ## Configuration
