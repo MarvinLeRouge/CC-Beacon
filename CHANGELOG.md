@@ -31,6 +31,8 @@ To regenerate locally, run `npx git-cliff -o CHANGELOG.md`.
 
 - *(changelog)* Add automated changelog workflow
 - Standardize AI working notes folder to docs/work-in-progress
+- Add backend flag to Codecov upload
+- *(ci)* Bump codecov-action to v7
 ## [2.0.0] - 2026-08-04
 
 ### 🚀 Features
