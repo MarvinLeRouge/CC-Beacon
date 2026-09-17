@@ -7,6 +7,10 @@ Releases are grouped by tag; unreleased commits (if any) appear under "Unrelease
 To regenerate locally, run `npx git-cliff -o CHANGELOG.md`.
 ## [unreleased]
 
+### 🐛 Bug Fixes
+
+- *(ci)* Trigger workflow on all pull requests, not just non-doc changes
+
 ### 📚 Documentation
 
 - *(ci)* Add Codecov, sync README with GeoChallenge-Tracker's structure
