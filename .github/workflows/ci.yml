@@ -88,3 +88,13 @@ jobs:
 
       - name: pip-audit
         run: pip-audit -r api/requirements.txt
+
+  ci-status:
+    name: CI status
+    if: always()
+    needs: [api-lint, api-test, api-security]
+    runs-on: ubuntu-latest
+    steps:
+      - name: Fail if any required job failed or was cancelled
+        if: contains(needs.*.result, 'failure') || contains(needs.*.result, 'cancelled')
+        run: exit 1
