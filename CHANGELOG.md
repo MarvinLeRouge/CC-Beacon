@@ -34,6 +34,7 @@ To regenerate locally, run `npx git-cliff -o CHANGELOG.md`.
 - Add backend flag to Codecov upload
 - *(ci)* Bump codecov-action to v7
 - *(ci)* Add Codecov thresholds
+- *(ci)* Add ci-status aggregator job
 ## [2.0.0] - 2026-08-04
 
 ### 🚀 Features
