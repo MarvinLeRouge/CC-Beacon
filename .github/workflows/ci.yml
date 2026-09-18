@@ -11,6 +11,7 @@ on:
 
 jobs:
   api-lint:
+    name: Lint
     runs-on: ubuntu-latest
 
     steps:
@@ -37,6 +38,7 @@ jobs:
         run: mypy .
 
   api-test:
+    name: Test
     runs-on: ubuntu-latest
 
     permissions:
@@ -68,6 +70,7 @@ jobs:
           use_oidc: true
 
   api-security:
+    name: Security
     runs-on: ubuntu-latest
 
     steps:
