@@ -40,6 +40,7 @@ To regenerate locally, run `npx git-cliff -o CHANGELOG.md`.
 - *(ci)* Bump codecov-action to v7
 - *(ci)* Add Codecov thresholds
 - *(ci)* Add ci-status aggregator job
+- Homogenize job naming across api-lint/api-test/api-security
 ## [2.0.0] - 2026-08-04
 
 ### 🚀 Features
