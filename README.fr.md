@@ -9,12 +9,13 @@
 ![Statut](https://img.shields.io/badge/Statut-production-brightgreen)
 ![JavaScript](https://img.shields.io/badge/JavaScript-ES2022-F7DF1E?logo=javascript&logoColor=black)
 ![Python](https://img.shields.io/badge/Python-3.11-3776AB?logo=python&logoColor=white)
-![FastAPI](https://img.shields.io/badge/FastAPI-api-009688?logo=fastapi&logoColor=white)
+![FastAPI](https://img.shields.io/badge/FastAPI-0.141+-009688?logo=fastapi&logoColor=white)
 ![Docker](https://img.shields.io/badge/Docker-ready-2496ED?logo=docker&logoColor=white)
 [![CI](https://github.com/MarvinLeRouge/CC-Beacon/actions/workflows/ci.yml/badge.svg)](https://github.com/MarvinLeRouge/CC-Beacon/actions/workflows/ci.yml)
 [![Deploy](https://github.com/MarvinLeRouge/CC-Beacon/actions/workflows/build-push.yml/badge.svg)](https://github.com/MarvinLeRouge/CC-Beacon/actions/workflows/build-push.yml)
 [![codecov](https://codecov.io/gh/MarvinLeRouge/CC-Beacon/graph/badge.svg)](https://codecov.io/gh/MarvinLeRouge/CC-Beacon)
-![Licence](https://img.shields.io/github/license/MarvinLeRouge/CC-Beacon?cacheSeconds=3600)
+![Tests](https://img.shields.io/badge/Tests-27%20passing-brightgreen)
+[![License](https://img.shields.io/github/license/MarvinLeRouge/CC-Beacon?cacheSeconds=3600)](LICENSE)
 
 ---
 
