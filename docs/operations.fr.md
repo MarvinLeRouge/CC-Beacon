@@ -14,7 +14,7 @@
 
 ### Dev
 
-Lancer l'API directement avec `uvicorn api.main:app --reload --port 8000` (voir [`CONTRIBUTING.fr.md`](../CONTRIBUTING.fr.md)). Aucune stack Docker Compose n'est nécessaire en développement local.
+Lancer l'API directement avec `uvicorn api.main:app --reload --port 8000` (voir [`CONTRIBUTING.fr.md`](i18n/fr/CONTRIBUTING.fr.md)). Aucune stack Docker Compose n'est nécessaire en développement local.
 
 ### Prod : pipeline
 
