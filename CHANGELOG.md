@@ -32,6 +32,7 @@ To regenerate locally, run `npx git-cliff -o CHANGELOG.md`.
 - Trim README sections superseded by dedicated docs
 - *(readme)* Document codecov coverage thresholds
 - *(readme)* Add tests badge and fix stack/license badges
+- *(root)* Move French community-health docs into docs/i18n/fr
 
 ### ⚙️ Miscellaneous Tasks
 

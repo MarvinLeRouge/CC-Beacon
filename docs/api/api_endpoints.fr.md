@@ -4,7 +4,7 @@
 
 # Documentation API : CC-Beacon
 
-> Toutes les routes `/api/*` nécessitent `Authorization: Bearer <token>` ; voir [`SECURITY.fr.md`](../../SECURITY.fr.md).
+> Toutes les routes `/api/*` nécessitent `Authorization: Bearer <token>` ; voir [`SECURITY.fr.md`](../i18n/fr/SECURITY.fr.md).
 
 ## Statique & santé
 
