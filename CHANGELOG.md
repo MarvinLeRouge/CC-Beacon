@@ -33,6 +33,7 @@ To regenerate locally, run `npx git-cliff -o CHANGELOG.md`.
 - *(readme)* Document codecov coverage thresholds
 - *(readme)* Add tests badge and fix stack/license badges
 - *(root)* Move French community-health docs into docs/i18n/fr
+- Align readme tagline with repository description
 
 ### ⚙️ Miscellaneous Tasks
 

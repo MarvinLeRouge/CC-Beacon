@@ -4,7 +4,7 @@
 
 # CC-Beacon
 
-> *Un outil léger de suivi de tâches Claude Code — un service FastAPI sur un VPS stockant des fichiers JSON structurés, servi derrière Traefik, consultable depuis un smartphone.*
+> *Outil léger de suivi de tâches Claude Code : un service FastAPI sur un VPS qui stocke des fichiers JSON structurés, servi derrière Traefik et consultable depuis un smartphone.*
 
 ![Statut](https://img.shields.io/badge/Statut-production-brightgreen)
 ![JavaScript](https://img.shields.io/badge/JavaScript-ES2022-F7DF1E?logo=javascript&logoColor=black)

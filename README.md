@@ -4,7 +4,7 @@
 
 # CC-Beacon
 
-> *A lightweight Claude Code task tracker — a FastAPI service on a VPS storing structured JSON files, served behind Traefik, and readable from any smartphone.*
+> *Lightweight Claude Code task tracker: a FastAPI service on a VPS that stores structured JSON work files, served behind Traefik and readable from any smartphone.*
 
 ![Status](https://img.shields.io/badge/Status-production-brightgreen)
 ![JavaScript](https://img.shields.io/badge/JavaScript-ES2022-F7DF1E?logo=javascript&logoColor=black)
