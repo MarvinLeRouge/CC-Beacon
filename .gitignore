@@ -23,6 +23,8 @@ config.json
 .serena
 # Graphify
 graphify-out
+# CodeGraph
+.codegraph
 
 # AI working notes (not part of the versioned project)
 docs/work-in-progress/
