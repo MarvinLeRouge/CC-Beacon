@@ -46,6 +46,7 @@ To regenerate locally, run `npx git-cliff -o CHANGELOG.md`.
 - Homogenize job naming across api-lint/api-test/api-security
 - Add local post-commit hook for changelog generation
 - *(gitignore)* Ignore codegraph folder
+- *(changelog)* Auto-merge the catch-up CHANGELOG.md PR
 ## [2.0.0] - 2026-08-04
 
 ### 🚀 Features
