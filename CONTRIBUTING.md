@@ -8,7 +8,7 @@ This is a personal project. External contributions (bug reports, fixes, small im
 
 ## Prerequisites
 
-- Python 3.11+
+- Python 3.14 and [uv](https://docs.astral.sh/uv/)
 - Docker (optional, for building the production image)
 
 ## Local setup
@@ -16,16 +16,16 @@ This is a personal project. External contributions (bug reports, fixes, small im
 ```bash
 git clone https://github.com/MarvinLeRouge/CC-Beacon.git
 cd CC-Beacon
-pip install -r api/requirements.txt -r api/requirements-dev.txt
-pre-commit install   # once, to enable the local quality gate
+(cd api && uv sync)   # creates api/.venv from api/uv.lock
+uv run --project api pre-commit install   # once, to enable the local quality gate
 cp config.example.json ~/.CC-Beacon/config.json   # fill in token, base_url, sl1_label
-uvicorn api.main:app --reload --port 8000
+uv run --project api uvicorn api.main:app --reload --port 8000
 ```
 
 ## Running tests
 
 ```bash
-pytest api/tests --cov=api --cov-config=api/pyproject.toml --cov-report=term-missing -v
+uv run --project api pytest api/tests --cov=api --cov-config=api/pyproject.toml --cov-report=term-missing -v
 ```
 
 ## Workflow

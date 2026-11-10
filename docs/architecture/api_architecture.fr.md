@@ -88,7 +88,7 @@
 │   ├── storage.py                <- stockage JSON sur fichiers, index calculé à la volée
 │   ├── tests/                     <- suite pytest
 │   ├── Dockerfile
-│   └── requirements*.txt, pyproject.toml
+│   └── pyproject.toml, uv.lock, .python-version
 ├── docs/
 │   └── ai/                   <- notes de travail IA (ignorées par git)
 ├── ops/

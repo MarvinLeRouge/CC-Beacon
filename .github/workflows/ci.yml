@@ -17,25 +17,22 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      - name: Set up Python
-        uses: actions/setup-python@v5
-        with:
-          python-version: "3.11"
+      - name: Set up uv
+        uses: astral-sh/setup-uv@v10.3.3
 
       - name: Install dependencies
-        run: |
-          pip install -r api/requirements.txt
-          pip install -r api/requirements-dev.txt
+        working-directory: api
+        run: uv sync --locked
 
       - name: Ruff check
-        run: ruff check api/
+        run: uv run --project api ruff check api/
 
       - name: Ruff format
-        run: ruff format --check api/
+        run: uv run --project api ruff format --check api/
 
       - name: Mypy
         working-directory: api
-        run: mypy .
+        run: uv run mypy .
 
   api-test:
     name: Test
@@ -48,18 +45,15 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      - name: Set up Python
-        uses: actions/setup-python@v5
-        with:
-          python-version: "3.11"
+      - name: Set up uv
+        uses: astral-sh/setup-uv@v10.3.3
 
       - name: Install dependencies
-        run: |
-          pip install -r api/requirements.txt
-          pip install -r api/requirements-dev.txt
+        working-directory: api
+        run: uv sync --locked
 
       - name: Run tests with coverage
-        run: pytest api/tests --cov=api --cov-config=api/pyproject.toml --cov-report=xml --cov-report=term-missing -v
+        run: uv run --project api pytest api/tests --cov=api --cov-config=api/pyproject.toml --cov-report=xml --cov-report=term-missing -v
 
       - name: Upload coverage to Codecov
         uses: codecov/codecov-action@v7
@@ -76,18 +70,17 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      - name: Set up Python
-        uses: actions/setup-python@v5
-        with:
-          python-version: "3.11"
+      - name: Set up uv
+        uses: astral-sh/setup-uv@v10.3.3
 
       - name: Install dependencies
-        run: |
-          pip install -r api/requirements.txt
-          pip install -r api/requirements-dev.txt
+        working-directory: api
+        run: uv sync --locked
 
       - name: pip-audit
-        run: pip-audit -r api/requirements.txt
+        run: |
+          uv export --project api --format requirements-txt --no-hashes --no-emit-project > /tmp/req.txt
+          uvx pip-audit -r /tmp/req.txt
 
   ci-status:
     name: CI status

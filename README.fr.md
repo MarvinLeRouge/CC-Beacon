@@ -8,7 +8,7 @@
 
 ![Statut](https://img.shields.io/badge/Statut-production-brightgreen)
 ![JavaScript](https://img.shields.io/badge/JavaScript-ES2022-F7DF1E?logo=javascript&logoColor=black)
-![Python](https://img.shields.io/badge/Python-3.11-3776AB?logo=python&logoColor=white)
+![Python](https://img.shields.io/badge/Python-3.14-3776AB?logo=python&logoColor=white)
 ![FastAPI](https://img.shields.io/badge/FastAPI-0.141+-009688?logo=fastapi&logoColor=white)
 ![Docker](https://img.shields.io/badge/Docker-ready-2496ED?logo=docker&logoColor=white)
 [![CI](https://github.com/MarvinLeRouge/CC-Beacon/actions/workflows/ci.yml/badge.svg)](https://github.com/MarvinLeRouge/CC-Beacon/actions/workflows/ci.yml)
@@ -125,17 +125,17 @@ Voir [`docs/architecture/api_architecture.fr.md`](docs/architecture/api_architec
 ## 🧪 Lancer les tests
 
 ```bash
-pip install -r api/requirements.txt -r api/requirements-dev.txt
+(cd api && uv sync)   # crée api/.venv depuis api/uv.lock
 
 # Tests de l'API (27 tests)
-pytest api/tests --cov=api --cov-config=api/pyproject.toml --cov-report=term-missing -v
+uv run --project api pytest api/tests --cov=api --cov-config=api/pyproject.toml --cov-report=term-missing -v
 ```
 
 Garde-fou qualité (aussi lancé automatiquement par `.github/workflows/ci.yml` et le hook pre-commit local) :
 ```bash
-ruff check api/
-ruff format --check api/
-cd api && mypy .
+uv run --project api ruff check api/
+uv run --project api ruff format --check api/
+cd api && uv run mypy .
 ```
 
 Seuils de couverture (`codecov.yml`, bloquants) : projet 80% (±2%), patch 90% (±5%).

@@ -8,7 +8,7 @@ Il s'agit d'un projet personnel. Les contributions externes (rapports de bugs, c
 
 ## Prérequis
 
-- Python 3.11+
+- Python 3.14 et [uv](https://docs.astral.sh/uv/)
 - Docker (optionnel, pour construire l'image de production)
 
 ## Installation locale
@@ -16,16 +16,16 @@ Il s'agit d'un projet personnel. Les contributions externes (rapports de bugs, c
 ```bash
 git clone https://github.com/MarvinLeRouge/CC-Beacon.git
 cd CC-Beacon
-pip install -r api/requirements.txt -r api/requirements-dev.txt
-pre-commit install   # une fois, pour activer le garde-fou qualité local
+(cd api && uv sync)   # crée api/.venv depuis api/uv.lock
+uv run --project api pre-commit install   # une fois, pour activer le garde-fou qualité local
 cp config.example.json ~/.CC-Beacon/config.json   # renseigner token, base_url, sl1_label
-uvicorn api.main:app --reload --port 8000
+uv run --project api uvicorn api.main:app --reload --port 8000
 ```
 
 ## Lancer les tests
 
 ```bash
-pytest api/tests --cov=api --cov-config=api/pyproject.toml --cov-report=term-missing -v
+uv run --project api pytest api/tests --cov=api --cov-config=api/pyproject.toml --cov-report=term-missing -v
 ```
 
 ## Workflow
