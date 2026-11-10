@@ -47,6 +47,7 @@ To regenerate locally, run `npx git-cliff -o CHANGELOG.md`.
 - Add local post-commit hook for changelog generation
 - *(gitignore)* Ignore codegraph folder
 - *(changelog)* Auto-merge the catch-up CHANGELOG.md PR
+- *(api)* Migrate to uv and upgrade dependencies
 ## [2.0.0] - 2026-08-04
 
 ### 🚀 Features

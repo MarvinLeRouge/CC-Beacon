@@ -3,8 +3,14 @@ FROM python:3.11-slim
 RUN useradd --create-home --uid 1000 appuser
 WORKDIR /app
 
-COPY api/requirements.txt ./api/requirements.txt
-RUN pip install --no-cache-dir -r api/requirements.txt
+COPY --from=ghcr.io/astral-sh/uv:0.13.7 /uv /uvx /bin/
+ENV UV_PROJECT_ENVIRONMENT=/opt/venv \
+    UV_PYTHON_DOWNLOADS=never \
+    UV_COMPILE_BYTECODE=1 \
+    UV_NO_CACHE=1
+COPY api/pyproject.toml api/uv.lock api/.python-version ./api/
+RUN cd api && uv sync --frozen --no-dev
+ENV PATH="/opt/venv/bin:$PATH"
 
 COPY api/ ./api/
 COPY web/ ./web/
