@@ -34,6 +34,7 @@ To regenerate locally, run `npx git-cliff -o CHANGELOG.md`.
 - *(readme)* Add tests badge and fix stack/license badges
 - *(root)* Move French community-health docs into docs/i18n/fr
 - Align readme tagline with repository description
+- Document uv and python 3.14, add dependabot (CHORE-001)
 
 ### ⚙️ Miscellaneous Tasks
 

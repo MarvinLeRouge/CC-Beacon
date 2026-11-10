@@ -33,3 +33,7 @@
 - [x] **Phase 5** — Durcissement sécurité : correction d'une traversée de chemin dans les id de work (CWE-22), désactivation des docs API auto-générées, headers HSTS/Permissions-Policy, `pip-audit` en CI, bornage de la taille des champs, logging serveur structuré avec gestionnaire d'exception global
 - [x] **Phase 6** — Consolidation design : échelle typographique unifiée, palette dark dédupliquée, couleur d'état erreur, indicateur "live" scopé à la vue, feuille de confirmation intégrée remplaçant `confirm()` natif, accessibilité clavier/lecteur d'écran, switch dark/light manuel
 - [x] **Phase 7** — Documentation et préparation de la release `v2.0.0`
+
+## Section 3 - Maintenance
+
+- [x] CHORE-001 - Homogénéiser Python : uv, Python 3.14, dépendances à jour, Dependabot

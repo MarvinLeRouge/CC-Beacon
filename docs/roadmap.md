@@ -32,3 +32,7 @@
 - [x] **Phase 5** — Security hardening: path-traversal fix in work ids (CWE-22), auto-generated API docs disabled, HSTS/Permissions-Policy headers, `pip-audit` in CI, bounded field sizes, structured server-side logging with a global exception handler
 - [x] **Phase 6** — Design consolidation: unified type scale, de-duplicated dark palette, error-state progress color, view-scoped live indicator, in-app confirmation sheet replacing native `confirm()`, keyboard/screen-reader accessibility, manual dark/light toggle
 - [x] **Phase 7** — Documentation and `v2.0.0` release prep
+
+## Section 3 - Maintenance
+
+- [x] CHORE-001 - Homogenize Python: uv, Python 3.14, upgraded deps, Dependabot
