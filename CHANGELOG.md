@@ -51,6 +51,7 @@ To regenerate locally, run `npx git-cliff -o CHANGELOG.md`.
 - *(api)* Migrate to uv and upgrade dependencies
 - *(api)* Move to python 3.14
 - Pin setup-uv to an exact release tag
+- Run CI on the changelog bot PR so its auto-merge can complete
 ## [2.0.0] - 2026-08-04
 
 ### 🚀 Features
