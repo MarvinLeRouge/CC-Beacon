@@ -37,3 +37,4 @@
 
 - [x] CHORE-001 - Homogenize Python: uv, Python 3.14, upgraded deps, Dependabot
 - [x] CHORE-002 - Keep the Python base image on its current minor in Dependabot
+- [x] CI-001 - Run CI on the changelog bot PR so its auto-merge can complete
