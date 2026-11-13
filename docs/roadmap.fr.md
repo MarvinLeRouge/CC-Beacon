@@ -37,3 +37,4 @@
 ## Section 3 - Maintenance
 
 - [x] CHORE-001 - Homogénéiser Python : uv, Python 3.14, dépendances à jour, Dependabot
+- [x] CHORE-002 - Bloquer les montées de version mineure de l'image Python dans Dependabot
