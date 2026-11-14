@@ -39,3 +39,4 @@
 - [x] CHORE-001 - Homogénéiser Python : uv, Python 3.14, dépendances à jour, Dependabot
 - [x] CHORE-002 - Bloquer les montées de version mineure de l'image Python dans Dependabot
 - [x] CI-001 - Lancer la CI sur la PR du bot changelog pour que son auto-merge aboutisse
+- [x] CHORE-003 - Limiter Dependabot au seul uv.lock (lockfile-only)
