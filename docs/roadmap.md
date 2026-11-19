@@ -39,3 +39,4 @@
 - [x] CHORE-002 - Keep the Python base image on its current minor in Dependabot
 - [x] CI-001 - Run CI on the changelog bot PR so its auto-merge can complete
 - [x] CHORE-003 - Make Dependabot update uv.lock only (lockfile-only)
+- [x] CHORE-004 - Load prod config only from shared/env, drop compose/.env interpolation

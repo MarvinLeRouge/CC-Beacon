@@ -92,7 +92,7 @@
 ├── docs/
 │   └── ai/                   <- AI working notes (gitignored)
 ├── ops/
-│   └── compose.env.example   <- template for compose/.env on the VPS
+│   └── secrets.env.example   <- template for shared/env/secrets.env on the VPS
 ├── scripts/
 │   └── update_work.sh        <- HTTP client for the API
 ├── web/

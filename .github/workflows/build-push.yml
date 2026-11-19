@@ -92,6 +92,9 @@ jobs:
             echo "==> Authenticate to GHCR"
             echo "${GHCR_TOKEN}" | docker login ghcr.io -u "${GHCR_USER}" --password-stdin
 
+            echo "==> Ensure deploy directories exist"
+            mkdir -p "${DEPLOY_PATH}/compose" "${DEPLOY_PATH}/shared/env"
+
             REPO_URL="https://raw.githubusercontent.com/${GITHUB_REPOSITORY}/${GITHUB_SHA}"
 
             echo "==> Fetch docker-compose.prod.yml (commit: ${GITHUB_SHA})"

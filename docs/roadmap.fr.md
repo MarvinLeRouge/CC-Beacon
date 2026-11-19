@@ -40,3 +40,4 @@
 - [x] CHORE-002 - Bloquer les montées de version mineure de l'image Python dans Dependabot
 - [x] CI-001 - Lancer la CI sur la PR du bot changelog pour que son auto-merge aboutisse
 - [x] CHORE-003 - Limiter Dependabot au seul uv.lock (lockfile-only)
+- [x] CHORE-004 - Charger la config prod uniquement depuis shared/env, supprimer l'interpolation via compose/.env

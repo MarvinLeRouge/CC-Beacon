@@ -27,27 +27,30 @@ Les déploiements en production sont entièrement automatisés via GitHub Action
 
 ### Prod : topologie
 
-Le routage passe par Traefik (TLS via Let's Encrypt), sur une unique règle basée sur l'hôte : `Host(${DOMAIN})` routé vers le conteneur `api`, qui sert aussi l'interface mobile statique (`web/`) en plus de l'API JSON.
+Le routage passe par Traefik (TLS via Let's Encrypt), sur une unique règle basée sur l'hôte : `Host(cc-beacon.marvinlerouge.dev)` routé vers le conteneur `api`, qui sert aussi l'interface mobile statique (`web/`) en plus de l'API JSON.
 
 ### Prod : organisation du serveur
 
 Sur le serveur de déploiement :
 
 ```
-~/votre-base-traefik/cc-beacon/
+/home/mlr/marvinlerouge.dev/cc-beacon/
 ├── compose/
-│   ├── docker-compose.yml          ← copie de docker-compose.prod.yml, récupérée à chaque déploiement
-│   └── .env                        ← DOMAIN=votre-domaine.com (jamais commité)
+│   └── docker-compose.yml          ← copie de docker-compose.prod.yml, récupérée à chaque déploiement
 └── shared/
     ├── env/
-    │   └── secrets.env             ← TOKEN=votre-token-secret (jamais commité)
+    │   └── secrets.env             ← secrets du conteneur (chmod 600, jamais commité)
     └── data/
         └── works/                  ← le stockage persistant de l'API (un fichier JSON par work)
 ```
 
-Deux fichiers d'environnement distincts, deux usages distincts :
-- `compose/.env` - lu par `docker compose` au démarrage pour l'interpolation des labels (`${DOMAIN}` dans les labels Traefik). Voir [`ops/compose.env.example`](../ops/compose.env.example) pour le modèle.
-- `shared/env/secrets.env` - transmis au conteneur `api` comme `TOKEN`, lu directement par l'application FastAPI.
+Le conteneur reçoit sa configuration uniquement via `env_file` dans `docker-compose.prod.yml`. Le fichier compose n'interpole rien depuis un fichier : le domaine est écrit dans le label Traefik et `IMAGE_TAG` est fourni par le workflow de déploiement.
+
+| Variable | Fichier | Rôle |
+|---|---|---|
+| `TOKEN` | `shared/env/secrets.env` | Token Bearer vérifié par l'API |
+
+Modèle : [`ops/secrets.env.example`](../ops/secrets.env.example). Pas de `app.env` : l'API n'a aucun réglage non secret en prod (`CC_BEACON_DATA_DIR` garde sa valeur par défaut `/data`).
 
 Générer un token avec :
 
@@ -58,7 +61,7 @@ openssl rand -hex 24
 Démarrer le conteneur :
 
 ```bash
-cd ~/votre-base-traefik/cc-beacon/compose && docker compose pull && docker compose up -d
+cd /home/mlr/marvinlerouge.dev/cc-beacon/compose && docker compose pull && docker compose up -d
 ```
 
 ## Configuration
