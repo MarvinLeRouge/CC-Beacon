@@ -10,7 +10,7 @@
 2. **HTTP client** - the script pushes work updates to the API (`POST /api/work`) and caches the returned index locally; no SSH, no rsync
 3. **FastAPI + Traefik** - a single container serves the mobile interface (`GET /`, `GET /app.js`) and the REST API (`/api/*`, protected by `Authorization: Bearer`), behind a Traefik reverse proxy with automatic TLS
 4. **Mobile interface** - `web/index.html` + `web/app.js` call the API and render project/sl1/work views with pagination, deletion, and auto-refresh when a work is `in_progress`
-5. **CI/CD deploy** - pushing to `main` triggers `.github/workflows/ci.yml` (ruff, mypy, pytest); on success, `.github/workflows/build-push.yml` builds the API image, pushes it to GHCR, and deploys it to the VPS over SSH
+5. **CI/CD deploy** - pushing to `main` triggers `.github/workflows/ci.yml` (ruff, mypy, pytest); on success, `.github/workflows/build-push-deploy.yml` builds the API image, pushes it to GHCR, and deploys it to the VPS over SSH
 
 ## Progress calculation
 
@@ -79,7 +79,7 @@
 ├── .github/
 │   └── workflows/
 │       ├── ci.yml             <- lint, type-check and test the API on every push/PR
-│       └── build-push.yml     <- builds and pushes the API image to GHCR, deploys over SSH
+│       └── build-push-deploy.yml <- builds and pushes the API image to GHCR, deploys over SSH
 ├── api/
 │   ├── main.py                <- FastAPI app: serves index.html/app.js, security headers, /healthz
 │   ├── auth.py                <- Bearer token dependency

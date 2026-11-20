@@ -42,3 +42,4 @@
 - [x] CHORE-003 - Limiter Dependabot au seul uv.lock (lockfile-only)
 - [x] CHORE-004 - Charger la config prod uniquement depuis shared/env, supprimer l'interpolation via compose/.env
 - [x] CI-002 - Épingler chaque GitHub Action sur sa majeure actuelle par SHA de commit, workflow changelog sur Node 26, aligner la config Dependabot (groupe actions unique)
+- [x] CI-003 - Renommer le workflow de déploiement en build-push-deploy.yml, deux jobs explicites (Build & push, Deploy), sans changement fonctionnel

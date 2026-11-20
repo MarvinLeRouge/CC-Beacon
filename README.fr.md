@@ -12,7 +12,7 @@
 ![FastAPI](https://img.shields.io/badge/FastAPI-0.141+-009688?logo=fastapi&logoColor=white)
 ![Docker](https://img.shields.io/badge/Docker-ready-2496ED?logo=docker&logoColor=white)
 [![CI](https://github.com/MarvinLeRouge/CC-Beacon/actions/workflows/ci.yml/badge.svg)](https://github.com/MarvinLeRouge/CC-Beacon/actions/workflows/ci.yml)
-[![Deploy](https://github.com/MarvinLeRouge/CC-Beacon/actions/workflows/build-push.yml/badge.svg)](https://github.com/MarvinLeRouge/CC-Beacon/actions/workflows/build-push.yml)
+[![Deploy](https://github.com/MarvinLeRouge/CC-Beacon/actions/workflows/build-push-deploy.yml/badge.svg)](https://github.com/MarvinLeRouge/CC-Beacon/actions/workflows/build-push-deploy.yml)
 [![codecov](https://codecov.io/gh/MarvinLeRouge/CC-Beacon/graph/badge.svg)](https://codecov.io/gh/MarvinLeRouge/CC-Beacon)
 ![Tests](https://img.shields.io/badge/Tests-27%20passing-brightgreen)
 [![License](https://img.shields.io/github/license/MarvinLeRouge/CC-Beacon?cacheSeconds=3600)](LICENSE)
@@ -91,7 +91,7 @@ projet
 2. **Client HTTP** — le script pousse les mises à jour vers l'API (`POST /api/work`) et met en cache l'index renvoyé localement ; plus de SSH, plus de rsync
 3. **FastAPI + Traefik** — un seul container sert l'interface mobile (`GET /`, `GET /app.js`) et l'API REST (`/api/*`, protégée par `Authorization: Bearer`), derrière un reverse proxy Traefik avec TLS automatique
 4. **Interface mobile** — `web/index.html` + `web/app.js` appellent l'API et affichent les vues projet/sl1/work avec pagination, suppression et rafraîchissement automatique quand un work est `in_progress`
-5. **Deploy CI/CD** — un push sur `main` déclenche `.github/workflows/ci.yml` (ruff, mypy, pytest) ; en cas de succès, `.github/workflows/build-push.yml` construit l'image de l'API, la pousse sur GHCR et la déploie sur le VPS via SSH
+5. **Deploy CI/CD** — un push sur `main` déclenche `.github/workflows/ci.yml` (ruff, mypy, pytest) ; en cas de succès, `.github/workflows/build-push-deploy.yml` construit l'image de l'API, la pousse sur GHCR et la déploie sur le VPS via SSH
 
 ---
 
