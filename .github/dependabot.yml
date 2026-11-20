@@ -33,5 +33,6 @@ updates:
       day: "monday"
     open-pull-requests-limit: 5
     groups:
-      minor-and-patch:
-        update-types: ["minor", "patch"]
+      # One weekly PR for every action bump, majors included
+      actions:
+        patterns: ["*"]
