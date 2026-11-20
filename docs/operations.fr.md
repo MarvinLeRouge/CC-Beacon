@@ -21,7 +21,7 @@ Lancer l'API directement avec `uvicorn api.main:app --reload --port 8000` (voir 
 Les déploiements en production sont entièrement automatisés via GitHub Actions, en deux workflows chaînés :
 
 1. **CI** (`.github/workflows/ci.yml`) s'exécute à chaque push/PR sur `main` : lint (Ruff), vérification de types (Mypy), tests avec couverture, scan de vulnérabilités des dépendances (`pip-audit`).
-2. **Build, Push & Deploy** (`.github/workflows/build-push.yml`) s'exécute automatiquement une fois la CI réussie sur `main` (déclencheur `workflow_run`), ou peut être déclenché manuellement (`workflow_dispatch`), ce qui contourne le garde-fou CI pour les hotfix, rollbacks ou redéploiements.
+2. **Build, Push & Deploy** (`.github/workflows/build-push-deploy.yml`) s'exécute automatiquement une fois la CI réussie sur `main` (déclencheur `workflow_run`), ou peut être déclenché manuellement (`workflow_dispatch`), ce qui contourne le garde-fou CI pour les hotfix, rollbacks ou redéploiements.
    - **Build & push** : l'image Docker de l'API est construite et poussée sur GHCR, taguée à la fois `sha-<7-caractères-du-commit>` et `latest` (`ghcr.io/marvinlerouge/cc-beacon-api`).
    - **Deploy** : une étape SSH sur le serveur de production récupère `docker-compose.prod.yml` directement depuis `raw.githubusercontent.com`, épinglé sur le SHA exact du commit déployé, puis exécute `docker compose pull` suivi de `docker compose up -d --remove-orphans`.
 

@@ -41,3 +41,4 @@
 - [x] CHORE-003 - Make Dependabot update uv.lock only (lockfile-only)
 - [x] CHORE-004 - Load prod config only from shared/env, drop compose/.env interpolation
 - [x] CI-002 - Pin every GitHub Action to its current major by commit SHA, changelog workflow on Node 26, align the Dependabot config (single actions group)
+- [x] CI-003 - Rename the deploy workflow to build-push-deploy.yml, two explicit jobs (Build & push, Deploy), no functional change

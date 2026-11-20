@@ -21,7 +21,7 @@ Run the API directly with `uvicorn api.main:app --reload --port 8000` (see [`CON
 Production deploys are fully automated via GitHub Actions, in two chained workflows:
 
 1. **CI** (`.github/workflows/ci.yml`) runs on every push/PR to `main`: lint (Ruff), type checks (Mypy), tests with coverage, dependency vulnerability scan (`pip-audit`).
-2. **Build, Push & Deploy** (`.github/workflows/build-push.yml`) runs automatically once CI succeeds on `main` (`workflow_run` trigger), or can be triggered manually (`workflow_dispatch`), which bypasses the CI gate for hotfixes, rollbacks, or redeploys.
+2. **Build, Push & Deploy** (`.github/workflows/build-push-deploy.yml`) runs automatically once CI succeeds on `main` (`workflow_run` trigger), or can be triggered manually (`workflow_dispatch`), which bypasses the CI gate for hotfixes, rollbacks, or redeploys.
    - **Build & push**: the API's Docker image is built and pushed to GHCR, tagged both `sha-<7-char-commit-sha>` and `latest` (`ghcr.io/marvinlerouge/cc-beacon-api`).
    - **Deploy**: an SSH step on the production host fetches `docker-compose.prod.yml` directly from `raw.githubusercontent.com`, pinned to the exact commit SHA being deployed, then runs `docker compose pull` followed by `docker compose up -d --remove-orphans`.
 
