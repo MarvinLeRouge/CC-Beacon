@@ -40,3 +40,4 @@
 - [x] CI-001 - Run CI on the changelog bot PR so its auto-merge can complete
 - [x] CHORE-003 - Make Dependabot update uv.lock only (lockfile-only)
 - [x] CHORE-004 - Load prod config only from shared/env, drop compose/.env interpolation
+- [x] CI-002 - Pin every GitHub Action to its current major by commit SHA, changelog workflow on Node 26, align the Dependabot config (single actions group)
