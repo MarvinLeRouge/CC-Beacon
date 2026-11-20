@@ -138,7 +138,7 @@ uv run --project api ruff format --check api/
 cd api && uv run mypy .
 ```
 
-Seuils de couverture (`codecov.yml`, bloquants) : projet 80% (±2%), patch 90% (±5%).
+Seuils de couverture (`codecov.yml`, bloquants) : projet 85% (±2%), patch 90% (±5%).
 
 ---
 

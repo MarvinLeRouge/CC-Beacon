@@ -138,7 +138,7 @@ uv run --project api ruff format --check api/
 cd api && uv run mypy .
 ```
 
-Coverage thresholds (`codecov.yml`, blocking): project 80% (±2%), patch 90% (±5%).
+Coverage thresholds (`codecov.yml`, blocking): project 85% (±2%), patch 90% (±5%).
 
 ---
 
