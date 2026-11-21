@@ -10,6 +10,7 @@ This is a personal project. External contributions (bug reports, fixes, small im
 
 - Python 3.14 and [uv](https://docs.astral.sh/uv/)
 - Docker (optional, for building the production image)
+- [gitleaks](https://github.com/gitleaks/gitleaks): the pre-commit hook scans staged changes for secrets and refuses to commit without it
 
 ## Local setup
 

@@ -44,3 +44,4 @@
 - [x] CI-002 - Épingler chaque GitHub Action sur sa majeure actuelle par SHA de commit, workflow changelog sur Node 26, aligner la config Dependabot (groupe actions unique)
 - [x] CI-003 - Renommer le workflow de déploiement en build-push-deploy.yml, deux jobs explicites (Build & push, Deploy), sans changement fonctionnel
 - [x] CI-004 - Relever le seuil de couverture de 80 % à 85 % (seuils et docs)
+- [x] CI-005 - Analyser les modifications indexées avec gitleaks dans le hook pre-commit
