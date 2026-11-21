@@ -10,6 +10,7 @@ Il s'agit d'un projet personnel. Les contributions externes (rapports de bugs, c
 
 - Python 3.14 et [uv](https://docs.astral.sh/uv/)
 - Docker (optionnel, pour construire l'image de production)
+- [gitleaks](https://github.com/gitleaks/gitleaks) : le hook pre-commit analyse les modifications indexées à la recherche de secrets et refuse de committer s'il est absent
 
 ## Installation locale
 

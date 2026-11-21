@@ -56,6 +56,7 @@ To regenerate locally, run `npx git-cliff -o CHANGELOG.md`.
 - *(actions)* Pin actions to current majors by sha (CI-002)
 - *(deploy)* Rename deploy workflow to build-push-deploy (CI-003)
 - *(coverage)* Raise the coverage floor to 85% (CI-004)
+- *(security)* Scan staged changes for secrets with gitleaks (CI-005)
 ## [2.0.0] - 2026-08-04
 
 ### 🚀 Features
