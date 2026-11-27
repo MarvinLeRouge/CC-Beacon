@@ -45,3 +45,4 @@
 - [x] CI-003 - Renommer le workflow de déploiement en build-push-deploy.yml, deux jobs explicites (Build & push, Deploy), sans changement fonctionnel
 - [x] CI-004 - Relever le seuil de couverture de 80 % à 85 % (seuils et docs)
 - [x] CI-005 - Analyser les modifications indexées avec gitleaks dans le hook pre-commit
+- [x] CI-006 - Un seul déploiement à la fois (groupe concurrency), pour que deux merges rapprochés ne suppriment plus les conteneurs l'un de l'autre
