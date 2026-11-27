@@ -44,3 +44,4 @@
 - [x] CI-003 - Rename the deploy workflow to build-push-deploy.yml, two explicit jobs (Build & push, Deploy), no functional change
 - [x] CI-004 - Raise the coverage floor from 80% to 85% (gates and docs)
 - [x] CI-005 - Scan staged changes for secrets with gitleaks in the pre-commit hook
+- [x] CI-006 - Run one deploy at a time (concurrency group), so close merges no longer remove each other's containers
